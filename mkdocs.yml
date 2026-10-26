@@ -1,0 +1,34 @@
+site_name: bridge-island
+site_description: Reference implementation of the bridge/island integration architecture (invented platforms).
+# repo_url: set after public release
+theme:
+  name: material
+  features: [navigation.sections, content.code.copy]
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+  - pymdownx.snippets:
+      base_path: ["."]
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+nav:
+  - Home: index.md
+  - Concepts: concepts.md
+  - Tutorial: tutorial.md
+  - Examples: examples.md
+  - Experiments: experiments.md
+  - Design rationale and limitations: rationale.md
+  - Related work: related-work.md
+  - API reference: api.md
+  - Contributing: contributing.md
+  - AI usage: AI_USAGE.md

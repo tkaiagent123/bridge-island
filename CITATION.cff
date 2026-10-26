@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using these metadata."
+title: "bridge-island: a reference implementation of the bridge/island integration architecture"
+type: software
+version: 0.1.0
+license: Apache-2.0
+authors:
+  - family-names: Kaminsky
+    given-names: Tzvi
+    affiliation: "Independent Researcher, Connecticut, USA"
+    # TODO(author): add ORCID, e.g. orcid: "https://orcid.org/0000-0000-0000-0000"
+# TODO(author): add `repository-code`, `doi` and `date-released` after public release.
