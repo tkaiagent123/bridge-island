@@ -1,0 +1,19 @@
+# Prepared, not activated. Deploy steps are commented out until release clearance is done.
+name: Docs
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# permissions:
+#   contents: write   # needed only for gh-pages deploy
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --all-groups
+      - run: uv run mkdocs build --strict
+      # - run: uv run mkdocs gh-deploy --force
