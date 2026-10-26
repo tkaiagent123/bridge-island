@@ -9,3 +9,10 @@ and the project follows [Semantic Versioning](https://semver.org/).
 ### Added
 - Project scaffold: packaging, tooling, CI definitions, documentation skeleton,
   release-check script.
+- Core domain model: elements, units table, permitted transforms, deterministic
+  clock and scheduler, event log, island/link registry.
+- Simplified command/response, label-word and publish/subscribe bus models.
+- Baseline platform, unique subsystem base, and the Bridge (OIU, Translator Module,
+  UID, health monitor, cyber monitor) composed in one `Bridge` object.
+- YAML mapping spec to generated Python module (`bridge_island.codegen`).
+- Invented aviation example, baseline interface v1, with tests for guidelines G1 to G6.
