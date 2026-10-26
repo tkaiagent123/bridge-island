@@ -1,0 +1,86 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "bridge-island"
+dynamic = ["version"]
+description = "A reference implementation of the bridge/island integration architecture, on invented platforms."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+authors = [{ name = "Tzvi Kaminsky" }]
+keywords = ["systems-engineering", "integration", "architecture", "simulation", "interfaces"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering",
+]
+dependencies = ["PyYAML>=6.0"]
+
+[project.optional-dependencies]
+plots = ["matplotlib>=3.7"]
+
+[project.scripts]
+bridge-island = "bridge_island.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-cov>=5",
+    "hypothesis>=6",
+    "ruff>=0.6",
+    "mypy>=1.10",
+    "types-PyYAML",
+    "pre-commit>=3.7",
+    "tomli>=2; python_version < '3.11'",
+]
+docs = [
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.5",
+    "mkdocstrings[python]>=0.25",
+]
+
+[tool.hatch.version]
+path = "src/bridge_island/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/bridge_island"]
+
+[tool.hatch.build.targets.sdist]
+exclude = ["CLEARANCE_PACKAGE.md", "release_check.local.toml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+
+[tool.coverage.run]
+source = ["bridge_island"]
+branch = true
+
+[tool.coverage.report]
+# The 90% target applies to core, bridge and codegen (checked in CI by scripts/check_coverage.py).
+show_missing = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests", "scripts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.10"
+files = ["src"]
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = ["bridge_island.core.*", "bridge_island.bridge.*"]
+strict = true
