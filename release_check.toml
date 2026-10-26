@@ -1,0 +1,23 @@
+# Generic banned-content rules (tracked). Real aircraft, program, supplier and product
+# names belong in release_check.local.toml, which is git-ignored and never published.
+# Rule numbers in the report are positions in terms-then-patterns order.
+
+exclude = [
+    "release_check.toml",
+    "scripts/release_check.py",
+    "tests/test_release_check.py",
+    "LICENSE",
+]
+
+terms = []
+
+patterns = [
+    # Program-metric phrasing: percentages or durations attached to schedule/effort/cost/defects.
+    '\b\d+(\.\d+)?\s?%\s+(of\s+)?(schedule|effort|cost|defects?|savings?|reduction)',
+    '\b(schedule|effort|duration)\b.{0,30}\b\d+\s+(months?|weeks?|man-?hours|staff-?years?)\b',
+    '\bdefect\s+(rate|density|count|escape)s?\b',
+    '\b(saved|saving|reduced|cut)\b.{0,20}\b\d+(\.\d+)?\s?(%|percent)',
+    # Material that is not cleared for release.
+    '\b(AI|LLM|GenAI|machine[- ]learning)[- ](assisted|generated|driven|based)\s+interface',
+    '\binterface\s+generation\s+(using|with|by)\s+(AI|LLM)',
+]
