@@ -13,7 +13,7 @@ import datetime as dt
 import hashlib
 import subprocess
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "CLEARANCE_PACKAGE.md"
@@ -32,7 +32,7 @@ def tracked_files() -> list[str]:
 def listing(files: list[str]) -> str:
     groups: dict[str, list[str]] = {}
     for f in files:
-        groups.setdefault(str(Path(f).parent) if "/" in f else ".", []).append(Path(f).name)
+        groups.setdefault(str(PurePosixPath(f).parent), []).append(PurePosixPath(f).name)
     return "\n".join(
         f"* `{d}/`: " + ", ".join(f"`{n}`" for n in sorted(names))
         for d, names in sorted(groups.items())
@@ -45,6 +45,8 @@ def main() -> int:
     commit = run("git", "rev-parse", "--short", "HEAD")
     release = run(sys.executable, "scripts/release_check.py")
     tests = run(sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider").splitlines()[-1]
+    lint = run(sys.executable, "-m", "ruff", "check", ".").splitlines()[-1]
+    types = run(sys.executable, "-m", "mypy").splitlines()[-1]
     remotes = run("git", "remote", "-v") or "none"
     text = f"""# Clearance package: bridge-island
 
@@ -78,8 +80,8 @@ Automated: `scripts/release_check.py` scans every tracked or not-yet-ignored fil
 program, supplier and product names that the author maintains. It runs in CI (generic list
 only) and as a pre-commit hook (both lists).
 
-Manual: the author reviews all content. `docs/AI_USAGE.md` records which parts were generated
-with AI assistance.
+Manual: the author must review all content before release. `docs/AI_USAGE.md` records which
+parts were generated with AI assistance and whether the author has reviewed them.
 
 ### Release check output (this run)
 
@@ -93,8 +95,16 @@ with AI assistance.
 {tests}
 ```
 
-Also verified: ruff and mypy clean, documentation builds with `--strict`, coverage on
-`core`, `bridge` and `codegen` at or above 90 percent.
+### Lint and types (this run)
+
+```text
+ruff: {lint}
+mypy: {types}
+```
+
+Not re-run by this script: the documentation build (`mkdocs build --strict`) and the coverage
+gate (90 percent on `core`, `bridge` and `codegen`). Both passed on a clean clone of the
+release commit; CI runs both.
 
 ## 4. Excluded from the public release
 
