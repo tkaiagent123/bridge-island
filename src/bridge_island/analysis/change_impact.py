@@ -1,9 +1,15 @@
 """What a baseline interface change touches, in each architecture.
 
 Counting model (stated assumptions, not measurements):
-  * Every dependency edge (baseline element, subsystem) has one conformance test, located
-    in whatever component owns the adapter for that edge. Every subsystem also has one
-    acceptance test.
+  * The unit of counting is the element-level dependency: an edge (baseline data element,
+    subsystem). A count taken at another level, for example baseline systems or units, is a
+    different quantity and is not comparable with these.
+  * Every dependency edge has ``tests_per_edge`` conformance tests (default 1), located in
+    whatever component owns the adapter for that edge. Every subsystem also has one
+    acceptance test. The value of ``tests_per_edge`` is arbitrary and it alone drives the
+    size of the "tests failing" row; the *difference* between the architectures in that row
+    does not depend on it (it is the number of P2P subsystems with code changes minus the
+    number of Bridge subsystems with code changes).
   * P2P: each subsystem owns its own adapter module. A rename, unit, encoding or removal
     change needs code in every adapter that reads the element. A rate change needs no code
     but invalidates timing assumptions, so those subsystems are re-verified.
@@ -73,16 +79,17 @@ def diff_interfaces(
     return changes
 
 
-def impact_p2p(changes: list[Change], edges: set[Edge]) -> Impact:
+def impact_p2p(changes: list[Change], edges: set[Edge], tests_per_edge: int = 1) -> Impact:
     value_refs = {c.ref for c in changes if c.kind in VALUE_KINDS}
     hit = [e for e in edges if e[0] in value_refs]
     coded = {s for _, s in hit}
     rate_msgs = {c.ref for c in changes if c.kind == "rate"}
     timing = {s for ref, s in edges if ref.split(".")[0] in rate_msgs}
-    return Impact(len(coded), len(coded), len(hit) + len(coded), len(coded | timing))
+    failing = tests_per_edge * len(hit) + len(coded)
+    return Impact(len(coded), len(coded), failing, len(coded | timing))
 
 
-def impact_bridge(changes: list[Change], edges: set[Edge]) -> Impact:
+def impact_bridge(changes: list[Change], edges: set[Edge], tests_per_edge: int = 1) -> Impact:
     value_refs = {c.ref for c in changes if c.kind in VALUE_KINDS}
     removed = {c.ref for c in changes if c.kind == "remove"}
     hit = [e for e in edges if e[0] in value_refs]
@@ -91,7 +98,7 @@ def impact_bridge(changes: list[Change], edges: set[Edge]) -> Impact:
     return Impact(
         len(removal_subs),
         tm + len(removal_subs),
-        len(hit) + len(removal_subs),
+        tests_per_edge * len(hit) + len(removal_subs),
         (1 if changes else 0) + len(removal_subs),
     )
 

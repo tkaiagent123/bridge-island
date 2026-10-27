@@ -84,3 +84,17 @@ def test_monte_carlo_is_reproducible_and_favours_the_bridge_on_average() -> None
     assert bridge["mean"] < p2p["mean"]
     assert p2p["p5"] <= p2p["p50"] <= p2p["p95"]
     assert rows != monte_carlo(seed=8, trials=300)
+
+
+def test_tests_failing_row_scales_with_the_arbitrary_assumption_but_the_gap_does_not() -> None:
+    edges = edges_from_mapping(load_module(world.HERE / "generated" / "mapping_v1.py"))
+    changes = diff_interfaces(world.interface(1), world.interface(2), world.RENAMES)
+    rows = {
+        k: (
+            impact_p2p(changes, edges, k).tests_failing,
+            impact_bridge(changes, edges, k).tests_failing,
+        )
+        for k in (0, 1, 2, 5)
+    }
+    assert rows == {0: (3, 1), 1: (9, 7), 2: (15, 13), 5: (33, 31)}  # as in docs/experiments.md
+    assert {p - b for p, b in rows.values()} == {2}

@@ -124,6 +124,27 @@ def change_impact(out: Path, seed: int, world: ModuleType, trials: int) -> dict[
     }
     print(f"Change impact, {world.NAME} v{first} -> v{last} ({LABEL}); seed {seed}")
     _table([("", "P2P", "Bridge")] + [(r["metric"], r["p2p"], r["bridge"]) for r in rows])
+    print(
+        "  Counts are element-level dependencies (n = baseline data elements, not systems)."
+        "\n  'tests_failing' assumes 1 conformance test per dependency; that value is arbitrary."
+        " Sensitivity:"
+    )
+    sensitivity = [
+        {
+            "tests_per_edge": k,
+            "p2p_tests_failing": ci.impact_p2p(changes, edges, k).tests_failing,
+            "bridge_tests_failing": ci.impact_bridge(changes, edges, k).tests_failing,
+        }
+        for k in (0, 1, 2, 5)
+    ]
+    files["sensitivity"] = _write_csv(out / "change_impact_sensitivity.csv", sensitivity)
+    _table(
+        [("tests per dependency", "P2P tests failing", "Bridge tests failing")]
+        + [
+            (s["tests_per_edge"], s["p2p_tests_failing"], s["bridge_tests_failing"])
+            for s in sensitivity
+        ]
+    )
 
     mc = ci.monte_carlo(seed, trials)
     files["monte_carlo"] = _write_csv(out / "change_impact_monte_carlo.csv", mc)

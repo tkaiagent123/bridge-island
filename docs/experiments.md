@@ -46,6 +46,13 @@ gives (P2P column is the mean of 5 repeats):
 | 8 | 93.2 | 320 | 48 | 9 |
 | 16 | 187.8 | 640 | 56 | 17 |
 
+!!! note "What n counts"
+    In this repository `n` is the number of baseline **data elements** (fields of published
+    messages), and `|E|` counts **element-level dependencies**: one per (element, subsystem)
+    pair. It is not the number of baseline systems or units. A count at the level of systems
+    would be much smaller than these, so the numbers here are not comparable with counts taken
+    at another level.
+
 Point-to-point grows with the product of the two sides, the Bridge with their sum. The
 count says nothing about how hard each interface is. The Bridge's interfaces are all
 concentrated in one component.
@@ -70,6 +77,22 @@ Aviation, `--seed 1`:
 | Modules touched | 3 | 2 |
 | Tests failing before the fix | 9 | 7 |
 | Components needing re-verification | 3 | 2 |
+
+**The "tests failing" row rests on an arbitrary assumption**: that each dependency has
+exactly one conformance test (`tests_per_edge = 1`). Change that number and the row changes
+with it, but the *gap* between the architectures does not, because it equals the number of P2P
+subsystems with code changes minus the number of Bridge subsystems with code changes (3 - 1 = 2
+here). The experiment writes the sensitivity to `change_impact_sensitivity.csv`:
+
+| Tests per dependency | P2P tests failing | Bridge tests failing |
+| --- | --- | --- |
+| 0 | 3 | 1 |
+| 1 (the table above) | 9 | 7 |
+| 2 | 15 | 13 |
+| 5 | 33 | 31 |
+
+Read the other three rows with the same caution: they follow from the counting model, not
+from measurement.
 
 For the Bridge, the code change is the Translator Module's mapping, except for the removed
 element: the one subsystem that used it must also handle the "unavailable" report. The

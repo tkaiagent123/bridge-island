@@ -1,17 +1,5 @@
 # Related work
 
-## The author's earlier presentations
-
-The bridge/island architecture was presented publicly by the author at:
-
-* INCOSE_IL 2021. <!-- TODO(author): title and link -->
-* NDIA Systems Engineering Division conference, 2022. <!-- TODO(author): title and link -->
-* NDIA Systems Engineering Division conference, 2024. The deck is hosted in the NDIA
-  proceedings on DTIC. <!-- TODO(author): title and DTIC link -->
-
-These are the origin of the pattern. This repository is a separate, open reference
-implementation on invented platforms.
-
 ## Policy and oversight context
 
 Modular open systems approaches are required for many U.S. defense programs by statute,

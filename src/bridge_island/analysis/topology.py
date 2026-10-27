@@ -1,6 +1,9 @@
 """Interface counts for point-to-point (P2P) versus Bridge integration.
 
-n = baseline elements, m = unique subsystems, E = dependency edges (element, subsystem).
+n = baseline data elements, m = unique subsystems, E = dependency edges (element, subsystem).
+This repository counts at the level of data elements. n is not the number of baseline systems
+or units, so |E| is a count of element-level dependencies; a count taken at the level of
+systems would be much smaller and is not comparable with these numbers.
   P2P:                    |E| interfaces, worst case n * m
   Bridge:                 n + m (one per element on the baseline side, one per subsystem)
   Bridge, consolidated:   1 + m (all baseline elements through one OIU interface)
