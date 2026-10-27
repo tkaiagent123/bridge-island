@@ -46,6 +46,8 @@ class Bridge:
         time_tag: Literal["source", "delivery"] = "source",
         processing_delay_s: float = 0.001,
         name: str = "bridge",
+        rate_policy: Literal["cap", "extrapolate"] = "cap",
+        max_extrapolation_s: float = 0.2,
     ) -> None:
         self.name = name
         self.sched = sched
@@ -59,7 +61,15 @@ class Bridge:
         self.log = EventLog()
         self.oiu = OemInterfaceUnit(f"{name}.oiu", interface, sched, self.log, self._on_baseline)
         self.tm = TranslatorModule(mapping, sched, self.log, time_tag)
-        self.uid = UniqueInterfaceDistributor(f"{name}.uid", sched, self.log, self._on_unique)
+        self.uid = UniqueInterfaceDistributor(
+            f"{name}.uid",
+            sched,
+            self.log,
+            self._on_unique,
+            rate_policy,
+            max_extrapolation_s,
+            self._running,
+        )
         self.cyber = CyberMonitor(
             sched,
             self.log,
@@ -69,6 +79,9 @@ class Bridge:
         self.health = HealthMonitor(sched, self.log, interface, self._announce)
         if network is not None:
             network.add(self)
+
+    def _running(self) -> bool:
+        return not self.stalled
 
     def _check_fit(self) -> None:
         """G4: consume only what the baseline publishes, emit only what it accepts."""

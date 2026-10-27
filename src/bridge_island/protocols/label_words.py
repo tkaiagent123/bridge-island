@@ -19,6 +19,8 @@ class Word:
     label: int
     value: Any
     source_time: float
+    estimated: bool = False
+    basis_time: float | None = None
 
 
 class LabelBus:

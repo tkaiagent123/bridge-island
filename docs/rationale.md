@@ -46,8 +46,13 @@ or certification standard and must not be used where failure could cause harm.
 * **Python cannot enforce G1 absolutely.** Code that misrepresents its own island can attach
   to the baseline. The design makes a bypass impossible through the public API, and the
   link registry makes any bypass visible. See [Concepts](concepts.md).
-* **Rates are caps.** The Bridge drops samples to stay under a subsystem's rate and never
-  fabricates samples. Resampling and extrapolation are out of scope.
+* **Neither rate policy meets a need the baseline cannot supply.** A subsystem that wants 50
+  Hz of data from a 20 Hz source cannot be fully served. `cap` delivers the real data at the
+  rate the baseline has. `extrapolate` delivers the rate the interface expects, but part of it
+  is predicted, and it adds latency. Either one keeps the existing interface working; neither
+  meets the subsystem's full need. See [Concepts](concepts.md#data-age-rates-and-what-the-bridge-does-not-do).
+  The extrapolator is deliberately simple (linear for floats, hold for other encodings, a
+  short time limit) and is not a state estimator.
 * **Time is simulated.** The scheduler is deterministic and seeded. There is no wall-clock
   time, no clock drift between islands, and no clock synchronization problem. A real
   integration has all three.

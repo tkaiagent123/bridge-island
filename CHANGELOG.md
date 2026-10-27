@@ -25,3 +25,4 @@ and the project follows [Semantic Versioning](https://semver.org/).
   timing and continuity, fault containment.
 - Documentation site: concepts, tutorial (executed by the test suite), examples,
   experiments, design rationale and limitations, related work, API reference.
+- Rate policy for subsystems that can use a higher rate than the baseline sends: `cap`\n  (default) or `extrapolate` (marked estimates, bounded in time). `demo --rate-policy`.

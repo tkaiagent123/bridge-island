@@ -19,6 +19,12 @@ def _parser() -> argparse.ArgumentParser:
     demo = sub.add_parser("demo", help="run an invented example and compare with point to point")
     demo.add_argument("example", choices=EXAMPLES)
     demo.add_argument("--seed", type=int, default=1)
+    demo.add_argument(
+        "--rate-policy",
+        choices=["cap", "extrapolate"],
+        default="cap",
+        help="when a subsystem can use a higher rate than the baseline sends",
+    )
 
     gen = sub.add_parser("codegen", help="compile a YAML mapping spec to a Python module (G5)")
     gen.add_argument("--spec", type=Path, required=True)
@@ -44,7 +50,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         from bridge_island.demo import run_demo
         from bridge_island.examples import load_world
 
-        run_demo(load_world(args.example), args.seed)
+        run_demo(load_world(args.example), args.seed, rate_policy=args.rate_policy)
     elif args.command == "codegen":
         from bridge_island.codegen import CodegenError, dictionary_for_spec, generate_file
 

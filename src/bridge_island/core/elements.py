@@ -59,11 +59,22 @@ class Message:
 
 @dataclass(frozen=True)
 class Datum:
-    """One element value with its *source* time of validity (G3), never delivery time."""
+    """One element value with its *source* time of validity (G3), never delivery time.
+
+    An *estimated* datum (see the Bridge's ``extrapolate`` rate policy) is a prediction, not a
+    measurement. Its ``source_time`` is the time the estimate is valid for, and ``basis_time``
+    is the time of the last real sample it was predicted from. Its age is measured from the
+    basis, so an estimate can never make old information look fresh.
+    """
 
     element: str
     value: Any
     source_time: float
+    estimated: bool = False
+    basis_time: float | None = None
 
     def age(self, now: float) -> float:
-        return now - self.source_time
+        basis = (
+            self.basis_time if self.estimated and self.basis_time is not None else self.source_time
+        )
+        return now - basis

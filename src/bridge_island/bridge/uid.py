@@ -71,14 +71,25 @@ class LabelWordsPort:
         for native, label in self.labels.items():
             self.down.subscribe(
                 label,
-                lambda w, n=native: sub.on_data(n, Datum(n, w.value, w.source_time)),  # type: ignore[misc]
+                lambda w, n=native: sub.on_data(  # type: ignore[misc]
+                    n, Datum(n, w.value, w.source_time, w.estimated, w.basis_time)
+                ),
             )
         self.down.subscribe(_STATUS_LABEL, lambda w: _apply_status(sub, w.value))
         self.up.subscribe(_UPLINK_LABEL, lambda w: on_uplink(sub.name, w.value))
         sub._uplink = lambda m: self.up.transmit(sub.name, Word(_UPLINK_LABEL, m, m.source_time))
 
     def send(self, native: str, datum: Datum) -> None:
-        self.down.transmit("uid", Word(self.labels[native], datum.value, datum.source_time))
+        self.down.transmit(
+            "uid",
+            Word(
+                self.labels[native],
+                datum.value,
+                datum.source_time,
+                datum.estimated,
+                datum.basis_time,
+            ),
+        )
 
     def send_status(self, status: Status) -> None:
         self.down.transmit("uid", Word(_STATUS_LABEL, status, 0.0))
@@ -108,7 +119,14 @@ class CommandResponsePort:
                 )
             )
             rt.on_receive[sa] = lambda m, n=native: sub.on_data(  # type: ignore[misc]
-                n, Datum(n, m.values["value"], m.source_time)
+                n,
+                Datum(
+                    n,
+                    m.values["value"],
+                    m.source_time,
+                    m.values.get("estimated", False),
+                    m.values.get("basis_time"),
+                ),
             )
         bc.transfers.append(
             Transfer(
@@ -133,7 +151,12 @@ class CommandResponsePort:
         self.bus.start()
 
     def send(self, native: str, datum: Datum) -> None:
-        self.pending[native] = Message(native, {"value": datum.value}, datum.source_time)
+        values = {
+            "value": datum.value,
+            "estimated": datum.estimated,
+            "basis_time": datum.basis_time,
+        }
+        self.pending[native] = Message(native, values, datum.source_time)
 
     def send_status(self, status: Status) -> None:
         self.status_queue.append(Message("status", {"status": status}, 0.0))
@@ -149,16 +172,42 @@ _PORTS: dict[str, Any] = {
 class UniqueInterfaceDistributor:
     island = "bridge"
 
-    def __init__(self, name: str, sched: Scheduler, log: EventLog, on_uplink: Uplink) -> None:
+    def __init__(
+        self,
+        name: str,
+        sched: Scheduler,
+        log: EventLog,
+        on_uplink: Uplink,
+        rate_policy: str = "cap",
+        max_extrapolation_s: float = 0.2,
+        is_running: Callable[[], bool] = lambda: True,
+    ) -> None:
+        """``rate_policy`` says what to do when a subsystem can use a higher rate than the
+        baseline supplies: ``"cap"`` delivers only real samples, at most at the subsystem's rate;
+        ``"extrapolate"`` delivers one item per period of the subsystem's rate: the freshest real
+        sample if one arrived, otherwise an *estimate* (linear for floats, hold for other
+        encodings), for at most ``max_extrapolation_s`` after the last real sample. A source that
+        is already as fast as the subsystem needs is handled exactly as with ``"cap"``. Neither
+        policy creates information the baseline did not send: both keep the interface working."""
+        if rate_policy not in ("cap", "extrapolate"):
+            raise ValueError(f"unknown rate policy {rate_policy!r}; use 'cap' or 'extrapolate'")
         self.name = name
         self.sched = sched
         self.log = log
         self.on_uplink = on_uplink
+        self.rate_policy = rate_policy
+        self.max_extrapolation_s = max_extrapolation_s
+        self._is_running = is_running
         self.subsystems: dict[str, UniqueSubsystem] = {}
         self._ports: dict[str, Port] = {}
         self._last_sent: dict[tuple[str, str], float] = {}
+        self._history: dict[tuple[str, str], deque[tuple[float, Any]]] = {}
+        self._pending: dict[tuple[str, str], Datum] = {}
+        self._gridded: set[tuple[str, str]] = set()
+        self._ticking: set[tuple[str, str]] = set()
         self.sent = 0
         self.decimated = 0
+        self.estimates = 0
 
     def connect(self, sub: UniqueSubsystem) -> None:
         if sub.protocol not in _PORTS:
@@ -172,6 +221,22 @@ class UniqueInterfaceDistributor:
         if need is None:
             raise KeyError(f"{subsystem} has no input {datum.element!r}")
         key = (subsystem, datum.element)
+        history = self._history.setdefault(key, deque(maxlen=2))
+        history.append((datum.source_time, datum.value))
+        period = 1.0 / need.rate_hz
+        slow = len(history) == 2 and history[1][0] - history[0][0] > period * 1.01
+        if self.rate_policy == "extrapolate" and slow:
+            # The source is slower than the subsystem can use: deliver on the subsystem's own
+            # rate grid, one slot per period, carrying the freshest real sample if one has
+            # arrived and an estimate otherwise. Real samples wait for their slot.
+            self._gridded.add(key)
+            self._pending[key] = datum
+            if key not in self._ticking:
+                self._ticking.add(key)
+                self.sched.every(period, lambda: self._tick(key), start=self.sched.now + period)
+            return True
+        self._gridded.discard(key)
+        self._pending.pop(key, None)
         last = self._last_sent.get(key)
         if last is not None and self.sched.now - last < 1.0 / need.rate_hz - 1e-9:
             self.decimated += 1
@@ -180,6 +245,31 @@ class UniqueInterfaceDistributor:
         self._ports[subsystem].send(datum.element, datum)
         self.sent += 1
         return True
+
+    def _tick(self, key: tuple[str, str]) -> None:
+        """One slot of the subsystem's rate grid: a real sample if pending, else an estimate."""
+        if key not in self._gridded or not self._is_running():
+            return
+        subsystem, native = key
+        pending = self._pending.pop(key, None)
+        if pending is not None:
+            self._ports[subsystem].send(native, pending)
+            self.sent += 1
+            return
+        need = self.subsystems[subsystem].need(native)
+        history = self._history[key]
+        now = self.sched.now
+        t1, v1 = history[-1]
+        if need is None or now - t1 > self.max_extrapolation_s:
+            return  # too long since a real sample: stop, so a dead source is not masked
+        value = v1  # integer codes, enums and booleans are held
+        if need.representation.encoding.startswith("float"):
+            t0, v0 = history[0]
+            if len(history) < 2 or t1 <= t0:
+                return
+            value = v1 + (v1 - v0) / (t1 - t0) * (now - t1)
+        self.estimates += 1
+        self._ports[subsystem].send(native, Datum(native, value, now, True, t1))
 
     def deliver_unavailable(self, subsystem: str, native: str, reason: str) -> None:
         self._ports[subsystem].send_status(("unavailable", native, reason))

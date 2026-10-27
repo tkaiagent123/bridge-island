@@ -111,9 +111,30 @@ Bridge.
 
 ## Data age, rates and what the Bridge does not do
 
-* A subsystem's declared rate is a *cap*. The Bridge drops samples to stay at or below it,
-  and never invents samples if the baseline is slower. A subsystem that wants 50 Hz and
-  gets a 20 Hz source sees 20 Hz, with honest ages.
+* A subsystem declares the highest rate it can use. When the baseline sends *faster* than
+  that, the Bridge drops samples to stay at the subsystem's rate. When the baseline sends
+  *slower*, the Bridge follows one of two **rate policies**, chosen when the Bridge is built
+  (`rate_policy="cap"` or `"extrapolate"`; on the command line,
+  `bridge-island demo aviation --rate-policy extrapolate`).
+
+    | | `cap` (default) | `extrapolate` |
+    | --- | --- | --- |
+    | What the subsystem receives | Only real samples, at the baseline's rate | One item per period of its own rate: the freshest real sample, or else an *estimate* |
+    | Estimates | None | Linear for floats, held for integer codes, enums and booleans; never beyond a time limit after the last real sample (default 0.2 s), so a dead source is not masked |
+    | Marking | n/a | Every estimate has `estimated=True` and a `basis_time`; its age is measured from the real sample it is based on |
+    | Example below | 20 per second | 49.8 per second, 60% estimated |
+    | Age of real samples | 6.7 ms | 21.7 ms (they wait for their slot) |
+    | Oldest delivery | 6.7 ms | 56.7 ms (an estimate is as old as its basis) |
+    | Largest estimate error | n/a | 0.8 mm |
+    | Subsystem's 50 ms latency budget | Met | Missed: the subsystem flags the old estimates |
+
+    The example is the invented aviation `CueingProcessor`, which wants altitude at 50 Hz
+    with a 50 ms latency budget, fed from a 20 Hz baseline source (synthetic, illustrative,
+    10 s run). **Neither policy gives the subsystem what it asked for.** The baseline does not
+    send 50 Hz data, and no policy can create it. `cap` supplies real data at the rate that
+    exists, within the latency budget. `extrapolate` supplies the rate the interface expects,
+    at the cost of predicted values and added latency. Both keep the existing interface
+    working. The subsystem's owner has to decide which compromise it can live with.
 * A baseline element that is removed is not guessed at. The generated mapping records it,
   the Bridge logs it, and the UID tells the affected subsystem that the input is
   unavailable. See the [aviation example](examples.md).

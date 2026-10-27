@@ -13,10 +13,15 @@ from bridge_island.examples import generated_path
 SYNTHETIC = "all content is invented; numbers are synthetic, illustrative"
 
 
-def run_demo(world: ModuleType, seed: int = 1, out: Callable[[str], None] = print) -> None:
-    out(f"bridge-island demo: {world.NAME} ({SYNTHETIC})")
+def run_demo(
+    world: ModuleType,
+    seed: int = 1,
+    out: Callable[[str], None] = print,
+    rate_policy: str = "cap",
+) -> None:
+    out(f"bridge-island demo: {world.NAME} ({SYNTHETIC}); rate policy: {rate_policy}")
     for version in world.VERSIONS:
-        system = world.build(version, seed)
+        system = world.build(version, seed, rate_policy=rate_policy)
         system.run(6.0)
         bridge = system.bridge
         assert bridge is not None
@@ -34,7 +39,8 @@ def run_demo(world: ModuleType, seed: int = 1, out: Callable[[str], None] = prin
         out(
             f"Bridge: {bridge.tm.identity_count} identity pass-throughs, "
             f"{bridge.tm.translated_count} translated, {bridge.uid.decimated} decimated to fit "
-            f"subsystem rates, {bridge.cyber.blocked} blocked by the cyber monitor"
+            f"subsystem rates, {bridge.uid.estimates} estimated samples delivered, "
+            f"{bridge.cyber.blocked} blocked by the cyber monitor"
         )
         out(f"G1 links to the baseline that skip the Bridge: {len(system.network.bypass_links())}")
         for event in bridge.log.of_kind("bridge.unavailable"):

@@ -41,7 +41,7 @@ class Received:
 
     @property
     def age(self) -> float:
-        return self.delivered_at - self.datum.source_time
+        return self.datum.age(self.delivered_at)
 
 
 @dataclass
