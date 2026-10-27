@@ -77,7 +77,10 @@ class BaselinePlatform:
             return
         self._started = True
         for rt_addr in self.bus.terminals:
+            rt = self.bus.terminals[rt_addr]
             for spec in self.interface.published:
+                if spec.subaddress not in rt.on_receive:
+                    continue  # this terminal does not take that message
                 self._bc.transfers.append(
                     Transfer(
                         rt_addr,
@@ -88,6 +91,8 @@ class BaselinePlatform:
                     )
                 )
             for spec in self.interface.accepted:
+                if spec.subaddress not in rt.on_transmit:
+                    continue
                 self._bc.transfers.append(
                     Transfer(
                         rt_addr,
