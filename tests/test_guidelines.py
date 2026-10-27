@@ -71,14 +71,14 @@ def test_g2_identical_representations_pass_through_unchanged(run: world.System) 
     rec = logger.latest("altitude_ft")
     assert rec is not None
     source = world.sources(1)["NavigationState"](rec.datum.source_time)
-    assert rec.datum.value == source["altitude_ft"]  # bit-for-bit, no conversion
+    assert rec.datum.value == source["altitude"]  # bit-for-bit, no conversion
     assert run.bridge.tm.identity_count > 0 and run.bridge.tm.translated_count > 0
 
 
 def test_g2_differing_representations_are_converted(run: world.System) -> None:
     rec = run.subsystems["PlanningDisplay"].latest("nav_alt_m")
     assert rec is not None
-    feet = world.sources(1)["NavigationState"](rec.datum.source_time)["altitude_ft"]
+    feet = world.sources(1)["NavigationState"](rec.datum.source_time)["altitude"]
     assert rec.datum.value == pytest.approx(feet * 0.3048)
 
 

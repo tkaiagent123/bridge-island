@@ -1,0 +1,48 @@
+# Mapping spec for the invented GHAV baseline interface, version 2.
+# Changes from v1: one field renamed, altitude now in meters, heading now float degrees,
+# AttitudeState at 100 Hz, one element added (unused by any system), one element removed.
+# Only this file changes: no unique system is edited, except to handle the removal.
+name: ghav_v2
+baseline_version: 2
+world: world.py
+
+downlinks:
+  # PlanningDisplay: altitude and heading now already match, so they pass through (G2)
+  - {from: NavigationState.latitude, to: PlanningDisplay.nav_lat_deg, transforms: [{valid_range: [-90, 90]}]}
+  - {from: NavigationState.longitude, to: PlanningDisplay.nav_lon_deg}
+  - {from: NavigationState.altitude, to: PlanningDisplay.nav_alt_m}
+  - {from: NavigationState.heading, to: PlanningDisplay.nav_heading_deg}
+  - {from: NavigationState.ground_speed_kt, to: PlanningDisplay.nav_speed_kmh, transforms: [{unit: [kt, km/h]}]}
+
+  # CueingProcessor
+  - {from: NavigationState.latitude, to: CueingProcessor.pos_lat_rad, transforms: [{unit: [deg, rad]}]}
+  - {from: NavigationState.longitude, to: CueingProcessor.pos_lon_rad, transforms: [{unit: [deg, rad]}]}
+  - {from: NavigationState.altitude, to: CueingProcessor.pos_alt_m}
+  - {from: AttitudeState.roll_deg, to: CueingProcessor.roll_rad, transforms: [{unit: [deg, rad]}]}
+  - {from: AttitudeState.pitch_deg, to: CueingProcessor.pitch_rad, transforms: [{unit: [deg, rad]}]}
+  - {from: AttitudeState.yaw_deg, to: CueingProcessor.yaw_rad, transforms: [{unit: [deg, rad]}]}
+  # The baseline removed this element. The Bridge reports it to the subsystem; it does not guess.
+  - from: AirData.baro_altitude_ft
+    to: CueingProcessor.baro_alt_m
+    status: removed
+    reason: element removed from baseline interface v2
+
+  - {from: TimeReference.utc_seconds, to: VoiceRelay.time_utc_s}
+  - {from: PowerStatus.power_state, to: VoiceRelay.power_state}
+
+  # StatusLogger still speaks feet, so it now needs a conversion it did not need before
+  - {from: NavigationState.altitude, to: StatusLogger.altitude_ft, transforms: [{unit: [m, ft]}]}
+  - {from: PowerStatus.bus_voltage_v, to: StatusLogger.bus_voltage_v}
+  - {from: PowerStatus.power_state, to: StatusLogger.power_state}
+  - {from: TimeReference.utc_seconds, to: StatusLogger.utc_seconds}
+
+uplinks:
+  - from: PlanningDisplay.show_page
+    to: DisplayRequest
+    fields:
+      - from: page
+        to: page_id
+        transforms: [{enum: {map: {MAP: 1, STATUS: 2, CHECKLIST: 3}, to_encoding: uint8}}]
+      - from: priority
+        to: priority
+        transforms: [{valid_range: [0, 3]}]

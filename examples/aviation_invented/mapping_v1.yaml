@@ -8,14 +8,14 @@ downlinks:
   # PlanningDisplay: metric units, publish/subscribe
   - {from: NavigationState.latitude, to: PlanningDisplay.nav_lat_deg, transforms: [{valid_range: [-90, 90]}]}
   - {from: NavigationState.longitude, to: PlanningDisplay.nav_lon_deg}
-  - {from: NavigationState.altitude_ft, to: PlanningDisplay.nav_alt_m, transforms: [{unit: [ft, m]}]}
+  - {from: NavigationState.altitude, to: PlanningDisplay.nav_alt_m, transforms: [{unit: [ft, m]}]}
   - {from: NavigationState.heading, to: PlanningDisplay.nav_heading_deg, transforms: [{bam_decode: 16}]}
   - {from: NavigationState.groundspeed_kt, to: PlanningDisplay.nav_speed_kmh, transforms: [{unit: [kt, km/h]}]}
 
   # CueingProcessor: radians, label words, tight latency
   - {from: NavigationState.latitude, to: CueingProcessor.pos_lat_rad, transforms: [{unit: [deg, rad]}]}
   - {from: NavigationState.longitude, to: CueingProcessor.pos_lon_rad, transforms: [{unit: [deg, rad]}]}
-  - {from: NavigationState.altitude_ft, to: CueingProcessor.pos_alt_m, transforms: [{unit: [ft, m]}]}
+  - {from: NavigationState.altitude, to: CueingProcessor.pos_alt_m, transforms: [{unit: [ft, m]}]}
   - {from: AttitudeState.roll_deg, to: CueingProcessor.roll_rad, transforms: [{unit: [deg, rad]}]}
   - {from: AttitudeState.pitch_deg, to: CueingProcessor.pitch_rad, transforms: [{unit: [deg, rad]}]}
   - {from: AttitudeState.yaw_deg, to: CueingProcessor.yaw_rad, transforms: [{unit: [deg, rad]}]}
@@ -26,7 +26,7 @@ downlinks:
   - {from: PowerStatus.power_state, to: VoiceRelay.power_state}
 
   # StatusLogger: already speaks the baseline representation (G2: identity everywhere)
-  - {from: NavigationState.altitude_ft, to: StatusLogger.altitude_ft}
+  - {from: NavigationState.altitude, to: StatusLogger.altitude_ft}
   - {from: PowerStatus.bus_voltage_v, to: StatusLogger.bus_voltage_v}
   - {from: PowerStatus.power_state, to: StatusLogger.power_state}
   - {from: TimeReference.utc_seconds, to: StatusLogger.utc_seconds}

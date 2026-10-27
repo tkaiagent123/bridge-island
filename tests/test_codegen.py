@@ -121,7 +121,7 @@ def test_generated_module_translates_and_rejects(spec_v1: Path, tmp_path: Path) 
     nav = {
         "latitude": 41.0,
         "longitude": -72.0,
-        "altitude_ft": 1000.0,
+        "altitude": 1000.0,
         "heading": 16384,
         "groundspeed_kt": 100.0,
     }

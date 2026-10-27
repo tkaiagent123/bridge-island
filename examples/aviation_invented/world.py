@@ -1,6 +1,14 @@
 """Generic Host Air Vehicle (GHAV): an invented aviation example.
 
 Every platform, message, field, rate and number here is invented.
+
+Baseline interface v2 applies this change set to v1:
+  * rename:    NavigationState.groundspeed_kt -> ground_speed_kt
+  * unit:      NavigationState.altitude feet -> meters
+  * encoding:  NavigationState.heading 16-bit binary angle -> float degrees
+  * rate:      AttitudeState 50 Hz -> 100 Hz
+  * added:     NavigationState.vertical_speed_mps
+  * removed:   AirData.baro_altitude_ft
 """
 
 from __future__ import annotations
@@ -21,6 +29,9 @@ from bridge_island.unique.subsystem import Need, Output, UniqueSubsystem
 HERE = Path(__file__).parent
 CR, PS, LW = "command_response", "pubsub", "label_words"
 
+# Renames between versions (old ref -> new ref); a diff cannot discover these on its own.
+RENAMES = {"NavigationState.groundspeed_kt": "NavigationState.ground_speed_kt"}
+
 
 def R(encoding: str, units: str, frame: str, protocol: str) -> Representation:
     return Representation(encoding, units, frame, protocol)
@@ -30,34 +41,35 @@ def E(name: str, rep: Representation, rng: tuple[float, float] | None = None) ->
     return DataElement(name, rep, rng)
 
 
+def f64(units: str, frame: str) -> Representation:
+    return R("float64", units, frame, CR)
+
+
 def interface(version: int = 1) -> BaselineInterface:
-    if version != 1:
+    if version not in (1, 2):
         raise ValueError(f"GHAV baseline v{version} is not defined")
-    f64 = lambda units, frame: R("float64", units, frame, CR)  # noqa: E731
+    v2 = version == 2
+    nav = [
+        E("latitude", f64("deg", "wgs84"), (-90, 90)),
+        E("longitude", f64("deg", "wgs84"), (-180, 180)),
+        E("altitude", f64("m", "msl"), (-450, 18500))
+        if v2
+        else E("altitude", f64("ft", "msl"), (-1500, 60000)),
+        E("heading", f64("deg", "true_north"), (0, 360))
+        if v2
+        else E("heading", R("bam16", "deg", "true_north", CR)),
+        E("ground_speed_kt" if v2 else "groundspeed_kt", f64("kt", "ground"), (0, 1500)),
+    ]
+    if v2:
+        nav.append(E("vertical_speed_mps", f64("m/s", "ground"), (-100, 100)))
+    air = [E("airspeed_kt", f64("kt", "air"), (0, 1500))]
+    if not v2:
+        air.insert(0, E("baro_altitude_ft", f64("ft", "msl"), (-1500, 60000)))
     return BaselineInterface(
-        version=1,
+        version=version,
         published=(
-            MessageSpec(
-                "NavigationState",
-                (
-                    E("latitude", f64("deg", "wgs84"), (-90, 90)),
-                    E("longitude", f64("deg", "wgs84"), (-180, 180)),
-                    E("altitude_ft", f64("ft", "msl"), (-1500, 60000)),
-                    E("heading", R("bam16", "deg", "true_north", CR)),
-                    E("groundspeed_kt", f64("kt", "ground"), (0, 1500)),
-                ),
-                rate_hz=20,
-                subaddress=1,
-            ),
-            MessageSpec(
-                "AirData",
-                (
-                    E("baro_altitude_ft", f64("ft", "msl"), (-1500, 60000)),
-                    E("airspeed_kt", f64("kt", "air"), (0, 1500)),
-                ),
-                rate_hz=10,
-                subaddress=2,
-            ),
+            MessageSpec("NavigationState", tuple(nav), rate_hz=20, subaddress=1),
+            MessageSpec("AirData", tuple(air), rate_hz=10, subaddress=2),
             MessageSpec(
                 "AttitudeState",
                 (
@@ -65,7 +77,7 @@ def interface(version: int = 1) -> BaselineInterface:
                     E("pitch_deg", f64("deg", "body"), (-90, 90)),
                     E("yaw_deg", f64("deg", "body"), (0, 360)),
                 ),
-                rate_hz=50,
+                rate_hz=100 if v2 else 50,
                 subaddress=3,
             ),
             MessageSpec(
@@ -78,10 +90,7 @@ def interface(version: int = 1) -> BaselineInterface:
                 subaddress=4,
             ),
             MessageSpec(
-                "TimeReference",
-                (E("utc_seconds", f64("s", "utc")),),
-                rate_hz=1,
-                subaddress=5,
+                "TimeReference", (E("utc_seconds", f64("s", "utc")),), rate_hz=1, subaddress=5
             ),
         ),
         accepted=(
@@ -132,7 +141,7 @@ def _needs() -> dict[str, tuple[Need, ...]]:
             n("time_utc_s", "float64", "s", "utc", LW, 10, 0.02, 2.5),
             n("power_state", "uint8", "1", "bus", LW, 10, 0.02, 2.5),
         ),
-        # Speaks the baseline representation exactly: every path is an identity (G2).
+        # Speaks the v1 baseline representation exactly: all identity under v1 (G2).
         "StatusLogger": (
             n("altitude_ft", "float64", "ft", "msl", CR, 1, 1.5, 3.0),
             n("bus_voltage_v", "float64", "V", "bus", CR, 1, 1.5, 3.0),
@@ -167,22 +176,38 @@ def make_subsystems(sched: Scheduler) -> dict[str, UniqueSubsystem]:
 
 def sources(version: int = 1) -> dict[str, Any]:
     """Invented, deterministic signals, evaluated at the time of validity."""
+    v2 = version == 2
 
     def nav(t: float) -> dict[str, Any]:
+        alt_ft = 5000.0 + 100.0 * math.sin(t / 10)
+        heading = (90.0 + 2.0 * t) % 360.0
+        speed = 250.0 + 5.0 * math.sin(t / 7)
+        if v2:
+            return {
+                "latitude": 41.0 + 1e-4 * t,
+                "longitude": -72.0 + 1.5e-4 * t,
+                "altitude": alt_ft * 0.3048,
+                "heading": heading,
+                "ground_speed_kt": speed,
+                "vertical_speed_mps": 10.0 * 0.3048 * math.cos(t / 10),
+            }
         return {
             "latitude": 41.0 + 1e-4 * t,
             "longitude": -72.0 + 1.5e-4 * t,
-            "altitude_ft": 5000.0 + 100.0 * math.sin(t / 10),
-            "heading": int(((90.0 + 2.0 * t) % 360.0) / 360.0 * 65536) % 65536,
-            "groundspeed_kt": 250.0 + 5.0 * math.sin(t / 7),
+            "altitude": alt_ft,
+            "heading": int(heading / 360.0 * 65536) % 65536,
+            "groundspeed_kt": speed,
         }
+
+    def air(t: float) -> dict[str, Any]:
+        out: dict[str, Any] = {"airspeed_kt": 240.0}
+        if not v2:
+            out["baro_altitude_ft"] = 5020.0 + 100.0 * math.sin(t / 10)
+        return out
 
     return {
         "NavigationState": nav,
-        "AirData": lambda t: {
-            "baro_altitude_ft": 5020.0 + 100.0 * math.sin(t / 10),
-            "airspeed_kt": 240.0,
-        },
+        "AirData": air,
         "AttitudeState": lambda t: {
             "roll_deg": 5.0 * math.sin(t),
             "pitch_deg": 2.0 * math.cos(t / 2),
@@ -197,16 +222,20 @@ def sources(version: int = 1) -> dict[str, Any]:
 class System:
     sched: Scheduler
     platform: BaselinePlatform
-    bridge: Bridge
+    bridge: Bridge | None
     subsystems: dict[str, UniqueSubsystem]
     network: Network
+    adapters: dict[str, Any] | None = None  # P2P only: each subsystem's own baseline adapter
 
     def run(self, seconds: float) -> None:
         self.sched.run_until(seconds)
 
 
 def build(
-    version: int = 1, seed: int = 1, mapping_file: Path | None = None, **bridge_opts: Any
+    version: int = 1,
+    seed: int = 1,
+    mapping_file: Path | None = None,
+    **bridge_opts: Any,
 ) -> System:
     """Assemble the baseline, the Bridge and the four unique systems, and start them."""
     sched = Scheduler(seed)
@@ -222,3 +251,28 @@ def build(
     bridge.start()
     platform.start()
     return System(sched, platform, bridge, subs, network)
+
+
+def build_p2p(version: int = 1, seed: int = 1, adapters_from: int | None = None) -> System:
+    """The same subsystems wired point to point.
+
+    ``adapters_from`` is the baseline version the subsystems' own adapters were written
+    against (default: the baseline's version). Leaving it at the old version models a
+    baseline change that nobody has propagated into the subsystems yet.
+    """
+    from bridge_island.p2p.direct import attach_direct
+
+    sched = Scheduler(seed)
+    network = Network()
+    iface = interface(version)
+    adapter_version = adapters_from or version
+    mapping = load_module(HERE / "generated" / f"mapping_v{adapter_version}.py")
+    platform = BaselinePlatform(sched, iface, sources(version), name="GHAV", enforce_bridge=False)
+    network.add(platform)
+    subs = make_subsystems(sched)
+    adapters = {
+        name: attach_direct(platform, sub, mapping, interface(adapter_version), network)
+        for name, sub in subs.items()
+    }
+    platform.start()
+    return System(sched, platform, None, subs, network, adapters)
