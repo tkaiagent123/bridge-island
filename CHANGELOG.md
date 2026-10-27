@@ -6,6 +6,8 @@ and the project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-26
+
 ### Added
 - Project scaffold: packaging, tooling, CI definitions, documentation skeleton,
   release-check script.

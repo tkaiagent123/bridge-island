@@ -16,3 +16,5 @@ outputs/
 # Private, never published
 release_check.local.toml
 CLEARANCE_PACKAGE.md
+clearance_notes.local.md
+RELEASE_CHECKLIST.md
