@@ -22,11 +22,11 @@ uv run bridge-island demo aviation
 uv run bridge-island experiment change-impact --seed 1
 ```
 
-(The `demo` and `experiment` commands arrive in later phases; see the [CHANGELOG](CHANGELOG.md).)
+The demo runs an invented aviation example on two baseline interface versions and compares\nwhat the change costs with point-to-point integration. Other commands:\n\n```powershell\nuv run bridge-island demo medical\nuv run bridge-island codegen --spec examples/aviation_invented/mapping_v2.yaml\nuv run bridge-island experiment topology|change-impact|timing|containment [--seed N] [--out DIR]\nuv run bridge-island check-rules      # runs the G1-G6 rule checks on an example\n```\n\nDocumentation: `uv run mkdocs serve` (concepts, a 15-minute tutorial, examples, experiments,\nlimitations, related work, API).
 
 ## Status
 
-Alpha scaffold. The design is described in the project documentation (`docs/`).
+Alpha. Two invented examples (aviation, medical), each with a baseline interface v1 and v2;\nfour reproducible experiments; tests for the six design guidelines G1-G6. See the\n[CHANGELOG](CHANGELOG.md). Not flight or medical software; not certified.
 
 ## License and citation
 

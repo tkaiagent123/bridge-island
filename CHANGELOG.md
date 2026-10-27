@@ -16,3 +16,10 @@ and the project follows [Semantic Versioning](https://semver.org/).
   UID, health monitor, cyber monitor) composed in one `Bridge` object.
 - YAML mapping spec to generated Python module (`bridge_island.codegen`).
 - Invented aviation example, baseline interface v1, with tests for guidelines G1 to G6.
+- Point-to-point integration module and analysis of interface counts and change impact.
+- Invented medical example (baseline v1 and v2); aviation example baseline v2.
+- `bridge-island` commands: `demo`, `codegen`, `experiment`, `check-rules`.
+- Four reproducible experiments: topology sweep, change impact (with Monte Carlo),
+  timing and continuity, fault containment.
+- Documentation site: concepts, tutorial (executed by the test suite), examples,
+  experiments, design rationale and limitations, related work, API reference.
