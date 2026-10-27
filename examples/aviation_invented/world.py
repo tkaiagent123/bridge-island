@@ -14,16 +14,14 @@ Baseline interface v2 applies this change set to v1:
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from bridge_island.baseline.platform import BaselineInterface, BaselinePlatform
-from bridge_island.bridge import Bridge
+from bridge_island.baseline.platform import BaselineInterface
 from bridge_island.codegen import Dictionary, load_module
 from bridge_island.core.clock import Scheduler
 from bridge_island.core.elements import DataElement, MessageSpec, Representation
-from bridge_island.core.links import Network
+from bridge_island.system import System, build_bridged, build_direct
 from bridge_island.unique.subsystem import Need, Output, UniqueSubsystem
 
 HERE = Path(__file__).parent
@@ -218,39 +216,14 @@ def sources(version: int = 1) -> dict[str, Any]:
     }
 
 
-@dataclass
-class System:
-    sched: Scheduler
-    platform: BaselinePlatform
-    bridge: Bridge | None
-    subsystems: dict[str, UniqueSubsystem]
-    network: Network
-    adapters: dict[str, Any] | None = None  # P2P only: each subsystem's own baseline adapter
-
-    def run(self, seconds: float) -> None:
-        self.sched.run_until(seconds)
-
-
 def build(
-    version: int = 1,
-    seed: int = 1,
-    mapping_file: Path | None = None,
-    **bridge_opts: Any,
+    version: int = 1, seed: int = 1, mapping_file: Path | None = None, **bridge_opts: Any
 ) -> System:
-    """Assemble the baseline, the Bridge and the four unique systems, and start them."""
-    sched = Scheduler(seed)
-    network = Network()
-    iface = interface(version)
+    """The baseline, the Bridge and the four unique systems, started."""
     mapping = load_module(mapping_file or HERE / "generated" / f"mapping_v{version}.py")
-    platform = BaselinePlatform(sched, iface, sources(version), name="GHAV")
-    bridge = Bridge(sched, iface, mapping, network, **bridge_opts)  # type: ignore[arg-type]
-    subs = make_subsystems(sched)
-    bridge.attach_baseline(platform)
-    for sub in subs.values():
-        bridge.attach_unique(sub)
-    bridge.start()
-    platform.start()
-    return System(sched, platform, bridge, subs, network)
+    return build_bridged(
+        interface(version), sources(version), mapping, make_subsystems, seed, "GHAV", **bridge_opts
+    )
 
 
 def build_p2p(version: int = 1, seed: int = 1, adapters_from: int | None = None) -> System:
@@ -260,19 +233,33 @@ def build_p2p(version: int = 1, seed: int = 1, adapters_from: int | None = None)
     against (default: the baseline's version). Leaving it at the old version models a
     baseline change that nobody has propagated into the subsystems yet.
     """
-    from bridge_island.p2p.direct import attach_direct
-
-    sched = Scheduler(seed)
-    network = Network()
-    iface = interface(version)
     adapter_version = adapters_from or version
     mapping = load_module(HERE / "generated" / f"mapping_v{adapter_version}.py")
-    platform = BaselinePlatform(sched, iface, sources(version), name="GHAV", enforce_bridge=False)
-    network.add(platform)
-    subs = make_subsystems(sched)
-    adapters = {
-        name: attach_direct(platform, sub, mapping, interface(adapter_version), network)
-        for name, sub in subs.items()
-    }
-    platform.start()
-    return System(sched, platform, None, subs, network, adapters)
+    return build_direct(
+        interface(version),
+        sources(version),
+        mapping,
+        interface(adapter_version),
+        make_subsystems,
+        seed,
+        "GHAV",
+    )
+
+
+# Used by the experiments and the rule checks, so they work on any example.
+NAME = "aviation"
+VERSIONS = (1, 2)
+TIMING = {
+    "slow": ("VoiceRelay", "time_utc_s"),  # a 1 Hz message: held through a stall, then late
+    "fast": ("CueingProcessor", "pos_alt_m"),
+    "stall": (2.2, 1.5),  # start, duration (s)
+}
+CONTAINMENT = {
+    "sender": "PlanningDisplay",
+    "message": "show_page",
+    "good": {"page": "MAP", "priority": 1},
+    "out_of_range": {"page": "MAP", "priority": 9},
+    "bad_enum": {"page": "NOPE", "priority": 1},
+    "malformed": {"page": "MAP"},
+    "unauthorized": "set_gear",
+}

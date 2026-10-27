@@ -1,0 +1,36 @@
+# Mapping spec for the invented GIHP baseline interface, version 1.
+name: gihp_v1
+baseline_version: 1
+world: world.py
+
+downlinks:
+  # DoseAdvisor: litres per hour and psi
+  - {from: PumpState.flow_rate, to: DoseAdvisor.flow_l_h, transforms: [{unit: [mL/h, L/h]}]}
+  - {from: PumpState.volume_infused_ml, to: DoseAdvisor.volume_ml}
+  - {from: PumpState.line_pressure, to: DoseAdvisor.pressure_psi, transforms: [{unit: [kPa, psi]}]}
+
+  # BedsideDisplay: shows the baseline's own units, and names the pump mode
+  - {from: PumpState.flow_rate, to: BedsideDisplay.flow_ml_h}
+  - {from: PumpState.volume_infused_ml, to: BedsideDisplay.volume_ml}
+  - {from: PumpState.line_pressure, to: BedsideDisplay.pressure_kpa}
+  - from: PumpState.pump_mode
+    to: BedsideDisplay.mode_name
+    transforms: [{enum: {map: {0: STOP, 1: RUN, 2: HOLD}, to_encoding: enum}}]
+  - {from: AlarmState.alarm_code, to: BedsideDisplay.alarm_code}
+  - {from: DeviceClock.clock_seconds, to: BedsideDisplay.clock_s}
+
+  # AlarmRelay: tightest latency budget; values already match
+  - {from: AlarmState.alarm_code, to: AlarmRelay.alarm_code}
+  - {from: AlarmState.alarm_priority, to: AlarmRelay.alarm_priority}
+  - {from: AlarmState.alarm_active, to: AlarmRelay.alarm_active}
+
+uplinks:
+  - from: BedsideDisplay.show_view
+    to: DisplayRequest
+    fields:
+      - from: view
+        to: view_id
+        transforms: [{enum: {map: {SUMMARY: 1, TREND: 2, ALARMS: 3}, to_encoding: uint8}}]
+      - from: brightness
+        to: brightness
+        transforms: [{valid_range: [0, 10]}]

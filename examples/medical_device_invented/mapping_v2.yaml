@@ -1,0 +1,42 @@
+# Mapping spec for the invented GIHP baseline interface, version 2.
+# Changes from v1: one field renamed, line pressure now in mmHg, alarm code now a named enum,
+# AlarmState at 10 Hz, one element added (unused), one element removed.
+name: gihp_v2
+baseline_version: 2
+world: world.py
+
+downlinks:
+  - {from: PumpState.flow_rate, to: DoseAdvisor.flow_l_h, transforms: [{unit: [mL/h, L/h]}]}
+  - {from: PumpState.total_volume_ml, to: DoseAdvisor.volume_ml}
+  - {from: PumpState.line_pressure, to: DoseAdvisor.pressure_psi, transforms: [{unit: [mmHg, psi]}]}
+
+  - {from: PumpState.flow_rate, to: BedsideDisplay.flow_ml_h}
+  - {from: PumpState.total_volume_ml, to: BedsideDisplay.volume_ml}
+  - {from: PumpState.line_pressure, to: BedsideDisplay.pressure_kpa, transforms: [{unit: [mmHg, kPa]}]}
+  - from: PumpState.pump_mode
+    to: BedsideDisplay.mode_name
+    transforms: [{enum: {map: {0: STOP, 1: RUN, 2: HOLD}, to_encoding: enum}}]
+  - from: AlarmState.alarm_code
+    to: BedsideDisplay.alarm_code
+    transforms: [{enum: {map: {NONE: 0, OCCLUSION: 1, AIR_IN_LINE: 2, DOOR_OPEN: 3, LOW_BATTERY: 4}, to_encoding: uint8}}]
+  - {from: DeviceClock.clock_seconds, to: BedsideDisplay.clock_s}
+
+  - from: AlarmState.alarm_code
+    to: AlarmRelay.alarm_code
+    transforms: [{enum: {map: {NONE: 0, OCCLUSION: 1, AIR_IN_LINE: 2, DOOR_OPEN: 3, LOW_BATTERY: 4}, to_encoding: uint8}}]
+  - from: AlarmState.alarm_priority
+    to: AlarmRelay.alarm_priority
+    status: removed
+    reason: element removed from baseline interface v2
+  - {from: AlarmState.alarm_active, to: AlarmRelay.alarm_active}
+
+uplinks:
+  - from: BedsideDisplay.show_view
+    to: DisplayRequest
+    fields:
+      - from: view
+        to: view_id
+        transforms: [{enum: {map: {SUMMARY: 1, TREND: 2, ALARMS: 3}, to_encoding: uint8}}]
+      - from: brightness
+        to: brightness
+        transforms: [{valid_range: [0, 10]}]
