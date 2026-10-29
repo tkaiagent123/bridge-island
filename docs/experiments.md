@@ -53,6 +53,10 @@ gives (P2P column is the mean of 5 repeats):
     would be much smaller than these, so the numbers here are not comparable with counts taken
     at another level.
 
+At this density and size the Bridge does not win at every point. With 2 subsystems, point-to-point needs fewer interfaces than the Bridge's 
+ + m (25.2 against 42); with 4 they are close (47.4 against 44); from 8 up the Bridge is well below. Consolidating the baseline side (1 + m) is lower at every m. The crossover moves with 
+ and the density, which the CSV lets you explore.
+
 Point-to-point grows with the product of the two sides, the Bridge with their sum. The
 count says nothing about how hard each interface is. The Bridge's interfaces are all
 concentrated in one component.

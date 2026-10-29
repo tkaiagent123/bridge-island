@@ -177,6 +177,7 @@ def change_impact(out: Path, seed: int, world: ModuleType, trials: int) -> dict[
             ax.hist([r[f"p2p_{key}"] for r in mc], bins=range(top), alpha=0.6, label="P2P")
             ax.hist([r[f"bridge_{key}"] for r in mc], bins=range(top), alpha=0.6, label="Bridge")
             ax.set(title=title, xlabel="count per trial")
+            ax.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
         axes[0].set_ylabel("trials")
         axes[0].legend()
         fig.suptitle(f"Monte Carlo, {trials} trials ({LABEL})")
@@ -250,7 +251,8 @@ def timing(out: Path, seed: int, world: ModuleType) -> dict[str, Path]:
                 for r in rows
                 if r["time_tag"] == mode and r["subsystem"] == slow_sub
             ]
-            ax.plot(*zip(*pts, strict=True), marker="o", label=f"stamped with {mode} time")
+            # markers only: no datum is delivered while the Bridge is stalled
+            ax.plot(*zip(*pts, strict=True), "o", label=f"stamped with {mode} time")
         ax.axvspan(start, start + duration, alpha=0.15, label="Bridge stalled")
         ax.set(
             xlabel="delivery time (s)",
