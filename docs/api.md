@@ -77,3 +77,5 @@ Generated from the docstrings.
 ::: bridge_island.report
 
 ::: bridge_island.term
+
+::: bridge_island.ui

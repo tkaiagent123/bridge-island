@@ -206,6 +206,26 @@ def _fmt(value: float | None) -> str:
     return "-" if value is None else f"{value:.1f}"
 
 
+table = _table  # shared with the local app
+
+
+def age_charts(
+    prefix: str, subsystems: list[str], trace: list[dict[str, Any]], duration_s: float
+) -> str:
+    """A grid of age-at-delivery charts, one per subsystem, as inline SVG."""
+    parts = ['<div class="grid">']
+    for idx, name in enumerate(subsystems):
+        pts = [
+            (r["delivered_at"], 1000 * r["age_s"], bool(r["estimated"]))
+            for r in trace
+            if r["subsystem"] == name
+        ]
+        chart = _age_chart(f"{prefix}-c{idx}", name, idx, pts, duration_s)
+        parts.append(f"<figure>{chart}<figcaption>{E(name)}</figcaption></figure>")
+    parts.append("</div>")
+    return "".join(parts)
+
+
 def build_report(
     world: ModuleType,
     seed: int = 1,
@@ -304,17 +324,7 @@ def build_report(
             )
         )
         body.append("<h3>Age of the data at delivery</h3>")
-        body.append('<div class="grid">')
-        for idx, name in enumerate(summary["subsystems"]):
-            pts = [
-                (r["delivered_at"], 1000 * r["age_s"], bool(r["estimated"]))
-                for r in trace
-                if r["subsystem"] == name
-            ]
-            body.append(
-                f"<figure>{_age_chart(f'v{v}-c{idx}', name, idx, pts, duration_s)}<figcaption>{E(name)}</figcaption></figure>"
-            )
-        body.append("</div>")
+        body.append(age_charts(f"v{v}", list(summary["subsystems"]), trace, duration_s))
         path_rows = []
         for p in desc["paths"]:
             how = {"identity": "identity (unchanged)", "removed": f"removed: {p['reason']}"}.get(

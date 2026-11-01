@@ -95,6 +95,10 @@ def _parser() -> argparse.ArgumentParser:
     rep.add_argument("--rate-policy", choices=["cap", "extrapolate"], default="cap")
     rep.add_argument("--stall", metavar="AT,DURATION", help="stall the Bridge, e.g. 2.2,1.5")
 
+    ui = add("ui", "open the app in your browser (forms and results; no command line needed)")
+    ui.add_argument("--port", type=int, default=8765, help="first port to try (default 8765)")
+    ui.add_argument("--no-browser", action="store_true", help="do not open the browser")
+
     gen = add("codegen", "compile a YAML mapping spec to a Python module (G5)")
     gen.add_argument("--spec", type=Path, required=True)
     gen.add_argument("--out", type=Path, help="default: <spec dir>/generated/<spec name>.py")
@@ -304,6 +308,16 @@ def _cmd_experiment(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_ui(args: argparse.Namespace) -> int:
+    from bridge_island.ui import serve
+
+    try:
+        serve(args.port, not args.no_browser)
+    except OSError as exc:
+        raise ScenarioError(f"the app could not start: {exc}") from exc
+    return 0
+
+
 def _cmd_check_rules(args: argparse.Namespace) -> int:
     from bridge_island.rules import check_rules
 
@@ -333,6 +347,7 @@ _COMMANDS = {
     "codegen": _cmd_codegen,
     "experiment": _cmd_experiment,
     "check-rules": _cmd_check_rules,
+    "ui": _cmd_ui,
 }
 
 

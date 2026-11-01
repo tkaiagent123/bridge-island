@@ -186,3 +186,22 @@ def manifest(scenario: Scenario, world: ModuleType, version: int) -> dict[str, A
         "mapping_spec_sha256": sha,
         "note": "synthetic, illustrative",
     }
+
+
+def fault_messages(world: ModuleType, version: int) -> dict[str, tuple[str, str, dict[str, Any]]]:
+    """Messages a faulty subsystem could send: key -> (plain description, message name, values)."""
+    cfg = world.CONTAINMENT
+    accepted = world.interface(version).accepted[0]
+    bad = {e.name: 0 for e in accepted.elements} | {accepted.elements[0].name: 99}
+    return {
+        "valid": ("A valid request", cfg["message"], dict(cfg["good"])),
+        "out_of_range": ("A value that is out of range", cfg["message"], dict(cfg["out_of_range"])),
+        "bad_enum": ("A name that does not exist", cfg["message"], dict(cfg["bad_enum"])),
+        "malformed": ("A message with a missing field", cfg["message"], dict(cfg["malformed"])),
+        "unauthorized": ("A message type nobody authorized", cfg["unauthorized"], {}),
+        "baseline_format": (
+            "A baseline-format message with a bad value",
+            accepted.name,
+            bad,
+        ),
+    }

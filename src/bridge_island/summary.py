@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import io
 from pathlib import Path
 from typing import Any
 
@@ -89,28 +90,94 @@ def trace_rows(system: System) -> list[dict[str, Any]]:
     return rows
 
 
+TRACE_FIELDS = [
+    "subsystem",
+    "input",
+    "source_time",
+    "basis_time",
+    "delivered_at",
+    "age_s",
+    "estimated",
+]
+
+
+def trace_csv_text(rows: list[dict[str, Any]]) -> str:
+    """The trace as CSV text, with the standard first line labelling the numbers."""
+    buffer = io.StringIO()
+    buffer.write("# synthetic, illustrative\n")
+    writer = csv.DictWriter(buffer, fieldnames=TRACE_FIELDS, lineterminator="\n")
+    writer.writeheader()
+    writer.writerows(rows)
+    return buffer.getvalue()
+
+
 def write_trace_csv(path: Path, rows: list[dict[str, Any]]) -> Path:
-    """Write the trace as CSV, with the standard first line labelling the numbers."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    fields = (
-        list(rows[0])
-        if rows
-        else [
-            "subsystem",
-            "input",
-            "source_time",
-            "basis_time",
-            "delivered_at",
-            "age_s",
-            "estimated",
-        ]
-    )
-    with path.open("w", newline="", encoding="utf-8") as fh:
-        fh.write("# synthetic, illustrative\n")
-        writer = csv.DictWriter(fh, fieldnames=fields, lineterminator="\n")
-        writer.writeheader()
-        writer.writerows(rows)
+    path.write_text(trace_csv_text(rows), encoding="utf-8", newline="")
     return path
+
+
+def findings(summary: dict[str, Any]) -> list[str]:
+    """What happened in a run, in plain sentences, for people who do not read tables."""
+    out = []
+    for name, s in summary["subsystems"].items():
+        text = f"{name} received {s['received']} items"
+        if s["mean_age_ms"] is not None:
+            text += f", on average {s['mean_age_ms']:.1f} ms old when they arrived"
+        extras = []
+        if s["estimated"]:
+            extras.append(f"{s['estimated']} of them were estimates, not real samples")
+        if s["late"]:
+            extras.append(f"{s['late']} arrived later than its latency budget allows")
+        if s["unavailable"]:
+            extras.append(
+                "it was told these inputs are no longer available: " + ", ".join(s["unavailable"])
+            )
+        if s["issues"]:
+            extras.append("it reports: " + "; ".join(s["issues"]))
+        out.append(
+            text + (". " + "; ".join(extras).capitalize() if extras else ", with no problems") + "."
+        )
+    b = summary.get("bridge")
+    if b:
+        counts = b["event_counts"]
+        health = sorted(
+            k.split(".", 1)[1]
+            for k in counts
+            if k.startswith("health.") and k != "health.recovered"
+        )
+        if counts.get("bridge.stall"):
+            out.append(
+                "The Bridge stalled and then resumed. The health monitor reported: "
+                + (", ".join(health) or "nothing")
+                + ". Data held through the stall arrives with its original, older time, so the receivers can see how old it is."
+            )
+        elif health:
+            out.append("The health monitor reported: " + ", ".join(health) + ".")
+        if b["blocked_by_cyber_monitor"]:
+            out.append(
+                f"The cyber monitor blocked {b['blocked_by_cyber_monitor']} message(s) that were not allowed to cross."
+            )
+        if b["rejected_by_translator"]:
+            out.append(
+                f"The Translator Module rejected {b['rejected_by_translator']} message(s) with bad or out-of-range values."
+            )
+        if b["estimates_delivered"]:
+            out.append(
+                f"{b['estimates_delivered']} estimated samples were delivered to fill gaps; they are marked as estimates and are as old as the real sample they are based on."
+            )
+    p = summary["platform"]
+    out.append(
+        f"The baseline accepted {p['accepted']} request(s) and rejected {len(p['rejected'])}."
+        + (" Nothing bad reached it." if b and not p["rejected"] else "")
+    )
+    n = summary["network"]
+    out.append(
+        "No unique system has a link that skips the Bridge."
+        if not n["bypass_links"]
+        else f"{n['bypass_links']} link(s) skip the Bridge."
+    )
+    return out
 
 
 def render_text(summary: dict[str, Any], max_events: int = 12) -> str:

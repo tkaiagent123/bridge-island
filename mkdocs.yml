@@ -24,6 +24,7 @@ plugins:
 nav:
   - Home: index.md
   - Concepts: concepts.md
+  - Using the app: app.md
   - Tutorial: tutorial.md
   - Examples: examples.md
   - Command-line reference: cli.md

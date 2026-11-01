@@ -40,6 +40,7 @@ search and fetch; the author has not yet verified them independently.
 | Tests | `tests/` | Claude Sonnet 5.5 | Wrote all tests, including the executable tutorial | Pending |
 | Documentation | `docs/`, `README.md`, `CHANGELOG.md` | Claude Sonnet 5.5 | Wrote all pages and verified the public references | Pending |
 | Scenarios, reports and CLI | `src/bridge_island/{scenario,summary,describe,diffing,report,term,cli}.py`, `examples/scenarios/`, `docs/cli.md`, `docs/scenarios.md` | Claude Sonnet 5.5 | Researched command-line, JOSS and accessibility guidance, then designed and wrote the commands, the report and the scenario format, at the author's request on 2026-11-01 | Pending |
+| Local web app | `src/bridge_island/ui.py`, `Start-bridge-island.bat`, `tests/test_app.py`, `docs/app.md` | Claude Sonnet 5.5 | Designed and wrote the point-and-click app and its tests, at the author's request on 2026-11-02, and checked it by driving it over HTTP and viewing screenshots | Pending |
 | Release preparation | local tag, clearance package, release checklist (all git-ignored or local) | Claude Sonnet 5.5 | Prepared; nothing was published | Pending |
 
 "Pending" becomes "Reviewed" only after the author's review pass of that area.

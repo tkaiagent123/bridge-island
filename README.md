@@ -43,6 +43,14 @@ uv run bridge-island --version
 Without uv: `python -m venv .venv`, activate it, then `pip install -e ".[plots]"` (the `plots`
 extra adds matplotlib for the experiment plots). Run the tests with `uv run pytest`.
 
+## Use it without a command line
+
+On Windows, double-click **`Start-bridge-island.bat`**. Your browser opens an app where you choose
+what should happen in a simulated run (a stall, a faulty system, a new baseline version), press a
+button, and get the result explained in plain sentences, with charts and downloads. The same thing
+from a terminal is `uv run bridge-island ui`. The app runs only on your own computer. See
+[docs/app.md](docs/app.md).
+
 ## Example usage
 
 ```powershell

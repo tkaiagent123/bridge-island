@@ -34,9 +34,12 @@ and the project follows [Semantic Versioning](https://semver.org/).
 - `--json` on the main commands (JSON on stdout, messages on stderr), `--no-color` and `NO_COLOR`,
   documented exit codes, errors rewritten for humans, help that leads with examples.
 - README: statement of need, installation, example usage, community.
+- A point-and-click app that opens in the browser (`bridge-island ui`, or double-click `Start-bridge-island.bat`): forms for runs, faults and stalls, scenario files, reports, guideline checks and experiments, with plain-English results and downloads. Local only, standard library only.
+- `python -m bridge_island`.
 
 ### Fixed
 - A subsystem could go stale after a Bridge stall because the rate cap was measured in arrival time
   instead of source time.
 - `extrapolate` produced no estimates for sources slower than about 5 Hz; the default limit is now
   1.5 source periods.
+- Two copies of the app could bind the same port on Windows; the port is now exclusive and the next free one is used.
