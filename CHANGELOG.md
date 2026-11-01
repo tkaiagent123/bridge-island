@@ -46,6 +46,9 @@ and the project follows [Semantic Versioning](https://semver.org/).
 - Related work: anti-corruption layer, age of information, temporal-database vocabulary, design
   structure matrices, medical-device and open-avionics integration (verified citations).
 ### Fixed
+- The local app allowed inline scripts; each page now carries a one-time nonce, and pages without a script allow none.
+- The `mmHg` constant used the torr value; it now uses conventional mercury (regenerated mappings).
+- Health annunciations now say which message they are about.
 - A subsystem could go stale after a Bridge stall because the rate cap was measured in arrival time
   instead of source time.
 - `extrapolate` produced no estimates for sources slower than about 5 Hz; the default limit is now
