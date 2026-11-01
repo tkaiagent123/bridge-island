@@ -60,13 +60,21 @@ class UniqueSubsystem:
     unavailable: dict[str, str] = field(default_factory=dict, init=False)
     annunciations: list[tuple[float, str, str]] = field(default_factory=list, init=False)
     _uplink: Callable[[Message], None] | None = field(default=None, init=False, repr=False)
+    _need_by_name: dict[str, Need] = field(default_factory=dict, init=False, repr=False)
+    _latest: dict[str, Received] = field(default_factory=dict, init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        self._need_by_name = {n.native_name: n for n in self.needs}
+        if len(self._need_by_name) != len(self.needs):
+            raise ValueError(f"{self.name}: two inputs have the same native name")
 
     def need(self, native_name: str) -> Need | None:
-        return next((n for n in self.needs if n.native_name == native_name), None)
+        return self._need_by_name.get(native_name)
 
     def on_data(self, native_name: str, datum: Datum) -> None:
         rec = Received(native_name, datum, self.sched.now)
         self.received.append(rec)
+        self._latest[native_name] = rec
         need = self.need(native_name)
         if need and rec.age > need.latency_budget_s:
             self.late.append(rec)
@@ -78,7 +86,7 @@ class UniqueSubsystem:
         self.annunciations.append((self.sched.now, kind, detail))
 
     def latest(self, native_name: str) -> Received | None:
-        return next((r for r in reversed(self.received) if r.native_name == native_name), None)
+        return self._latest.get(native_name)
 
     def check(self) -> list[str]:
         """Consumer-side checks at the current time: missing, unavailable or stale inputs."""

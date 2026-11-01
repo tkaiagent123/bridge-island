@@ -1,0 +1,17 @@
+# Prepared, not activated. Run by hand (workflow_dispatch) when behaviour changes: it takes minutes.
+name: Mutation check
+on:
+  workflow_dispatch:
+
+jobs:
+  mutation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --all-groups
+      - run: uv run python scripts/mutation_check.py --sample 300 --jobs 2
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mutation-report
+          path: outputs/mutation.json

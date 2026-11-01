@@ -44,6 +44,10 @@ The page across the top has six tabs.
   what the health monitor and the cyber monitor did, and whether anything bad reached the baseline.
 * **What each system received** is the same information as a table. *Late* means the data arrived
   older than that system's own latency budget allows.
+  *Age at arrival* is how old each value was when it arrived, *Average age* is how old the system's
+  newest value was on average over the whole run, and *Peak age* is the oldest it ever got. A
+  system that waits for a slow source can look fine at arrival and still hold old data; read the
+  average and the peak ([how age is measured](concepts.md#how-age-is-measured)).
 * **Age of the data over time** has one chart per system. Across is when the data arrived; up is how
   old it was. A dot far above the others is old data. Systems use different marker shapes, and hollow
   markers are estimates, so colour is never the only clue.

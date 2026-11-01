@@ -69,3 +69,28 @@ or when the unique systems can simply adopt the baseline's representation (guide
 still applies there: the Bridge passes the data through unchanged). It adds a component, a
 latency and a failure mode, and it is worth that only when the cost of coupling many
 independent systems to an immutable core is higher.
+
+## Critical review: threats to validity
+
+This section lists what the evidence in this repository does and does not show. All numbers
+here and elsewhere are synthetic, illustrative.
+
+- **The platforms are invented, by design.** Nothing here measures a real integration. The
+  examples show that the behaviours are implemented and testable, not that the pattern pays off
+  on any real system.
+- **The change-impact model is a counting model.** Its tests-per-dependency figure is an
+  assumption, and the result depends on it (the sensitivity table shows how). The `n` it counts
+  is baseline data elements, not baseline systems.
+- **Latency is simulated.** Delays come from a seeded random model, not from a measured bus. The
+  average and peak ages are exact for the simulated deliveries, but the delay distribution is
+  invented.
+- **Neither rate policy meets a subsystem's full need.** `cap` lowers the rate and `extrapolate`
+  fills the gap with estimates (marked `estimated`). Both only support the existing interface.
+- **Age is measured four ways** because arrival age alone hides how long a value is held. The
+  time-average and peak figures are the ones to read when a source is slow or the Bridge stalls.
+- **Tests are checked by deliberate breakage.** `scripts/mutation_check.py` changes the code on
+  purpose and reports the changes no test notices. A sample run exposed gaps (an unconverted
+  constant, exact counters, health thresholds); each was fixed or covered by a test. Some
+  surviving mutants are equivalent changes that cannot be detected, so the score is not 100%.
+- **One implementation, one author's model.** The guidelines G1 to G6 are checked against this
+  code, not against independent implementations.

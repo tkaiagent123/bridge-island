@@ -109,6 +109,42 @@ partition (baseline-facing, translation, unique-facing, monitor), and the parts 
 direct references to each other. They communicate only through callbacks owned by the
 Bridge.
 
+## How age is measured
+
+G3 keeps the *source* time, so a receiver can always compute age. There are three useful ways to
+summarize it, and they answer different questions. In the vocabulary of temporal databases, source
+time is **valid time** (when the fact was true in the world) and delivery time is closer to
+**transaction time** (when the system learned it). Age of information as a measure of freshness is
+from the networking literature (see [Related work](related-work.md)).
+
+| Measure | Question it answers |
+| --- | --- |
+| **Age at arrival** | How old was a datum at the moment it landed? |
+| **Average age over time** | If a receiver looks at its data at a random moment, how old is it on average? |
+| **Peak age** | How old does the data it holds get, at worst, just before the next update? |
+| **Time out of tolerance** | For how long was the data older than the receiver says it can accept? |
+
+Age at arrival ignores the time a receiver spends *holding* a datum while it waits for the next
+one. For a stream delivered every `T` seconds with delay `d`, the average age over time is
+`d + T/2` and the peak is `d + T`. An update only resets the age if it is fresher than what is
+already held, so an old datum arriving late does not make the data look younger. Estimates are
+aged from the real sample they are based on.
+
+For the invented aviation example, 8 simulated seconds, seed 1 (synthetic, illustrative):
+
+| Subsystem | Age at arrival | Average over time | Peak | Same run with a 1.5 s Bridge stall: peak |
+| --- | --- | --- | --- | --- |
+| `PlanningDisplay` (5 Hz) | 8.5 ms | 108.5 ms | 208.5 ms | 1708.0 ms |
+| `CueingProcessor` (up to 50 Hz) | 6.7 ms | 28.8 ms | 106.7 ms | 1606.2 ms |
+| `VoiceRelay` (1 Hz) | 6.7 ms | 506.6 ms | 1006.7 ms | 1706.2 ms |
+| `StatusLogger` (1 Hz) | 1005.5 ms | 1505.5 ms | 2005.5 ms | 2005.5 ms |
+
+`VoiceRelay` is the instructive row. Its data arrives 6.7 ms old, which looks excellent, but because
+it gets an update only once a second its data is on average 507 ms old over time. And during a stall,
+`PlanningDisplay` still reports an age at arrival near 10 ms while the data it holds gets 1.7 s
+old. Arrival-only figures miss that, so the app and the report show all of these measures. A
+subsystem's own tolerance (`stale_after_s`) is used for the last one: in the stalled run,
+`CueingProcessor`, which tolerates 0.25 s, spent 1.36 s working from data older than it accepts.
 ## Data age, rates and what the Bridge does not do
 
 * A subsystem declares the highest rate it can use. When the baseline sends *faster* than

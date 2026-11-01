@@ -75,9 +75,18 @@ src = ["src", "tests", "scripts"]
 extend-exclude = ["examples/*/generated"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF", "S", "C90"]
+ignore = [
+    "S101",  # assert: used to narrow types for the checker, never for validation
+    "S311",  # random: the simulation needs reproducible numbers, not secret ones
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 15
 
 [tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S"]  # tests use asserts, fixed subprocess calls and throwaway files
+"scripts/**" = ["S603", "S607"]  # the scripts run git, gh and pytest with fixed arguments
 # Report-formatting modules contain long message strings.
 "src/bridge_island/demo.py" = ["E501"]
 "src/bridge_island/rules.py" = ["E501"]
@@ -93,8 +102,4 @@ select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
 [tool.mypy]
 python_version = "3.10"
 files = ["src"]
-warn_unused_ignores = true
-
-[[tool.mypy.overrides]]
-module = ["bridge_island.core.*", "bridge_island.bridge.*"]
-strict = true
+strict = true  # the whole package, not just core and bridge

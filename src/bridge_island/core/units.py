@@ -26,7 +26,11 @@ _UNITS: dict[str, tuple[str, float, float]] = {
     "rad": ("angle", 180.0 / math.pi, 0.0),
     "kPa": ("pressure", 1.0, 0.0),
     "psi": ("pressure", 6.894757293168361, 0.0),
-    "mmHg": ("pressure", 0.1333223684211, 0.0),
+    "mmHg": (
+        "pressure",
+        0.133322387415,
+        0.0,
+    ),  # conventional mercury: 13595.1 kg/m3 at standard gravity
     "degC": ("temperature", 1.0, 0.0),
     "degF": ("temperature", 5.0 / 9.0, -160.0 / 9.0),
     "mL/h": ("flow", 1.0, 0.0),

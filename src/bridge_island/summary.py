@@ -7,18 +7,43 @@ import io
 from pathlib import Path
 from typing import Any
 
+from bridge_island.age import age_profile, time_above
 from bridge_island.system import System
+from bridge_island.unique.subsystem import UniqueSubsystem
+
+
+def _text_ms(value: float | None) -> str:
+    return "-" if value is None else f"{value:.1f} ms"
 
 
 def _ms(seconds: float) -> float:
     return round(1000.0 * seconds, 3)
 
 
+def _age_profiles(sub: UniqueSubsystem, end: float) -> dict[str, tuple[float, float, float]]:
+    """Per input that received anything: (time-average age, peak age, time older than tolerated)."""
+    streams: dict[str, list[tuple[float, float]]] = {}
+    for r in sub.received:
+        d = r.datum
+        basis = d.basis_time if d.estimated and d.basis_time is not None else d.source_time
+        streams.setdefault(r.native_name, []).append((r.delivered_at, basis))
+    out: dict[str, tuple[float, float, float]] = {}
+    for name, stream in streams.items():
+        profile = age_profile(stream, end)
+        need = sub.need(name)
+        if profile is not None and need is not None:
+            out[name] = (profile[0], profile[1], time_above(stream, end, need.stale_after_s))
+    return out
+
+
 def summarize(system: System) -> dict[str, Any]:
     """Counts, ages and issues for every subsystem, plus Bridge, baseline and network state."""
     subsystems: dict[str, Any] = {}
+    end = system.sched.now
     for name, sub in system.subsystems.items():
         ages = [r.age for r in sub.received]
+        profiles = list(_age_profiles(sub, end).items())
+        worst = max(profiles, key=lambda p: p[1][2], default=None)
         subsystems[name] = {
             "protocol": sub.protocol,
             "inputs": len(sub.needs),
@@ -26,6 +51,12 @@ def summarize(system: System) -> dict[str, Any]:
             "estimated": sum(1 for r in sub.received if r.datum.estimated),
             "mean_age_ms": _ms(sum(ages) / len(ages)) if ages else None,
             "max_age_ms": _ms(max(ages)) if ages else None,
+            "time_avg_age_ms": _ms(sum(p[1][0] for p in profiles) / len(profiles))
+            if profiles
+            else None,
+            "peak_age_ms": _ms(max(p[1][1] for p in profiles)) if profiles else None,
+            "stale_s": round(worst[1][2], 6) if worst else 0.0,
+            "stale_input": worst[0] if worst and worst[1][2] > 0 else None,
             "late": len(sub.late),
             "issues": sub.check(),
             "unavailable": dict(sub.unavailable),
@@ -124,7 +155,16 @@ def findings(summary: dict[str, Any]) -> list[str]:
         text = f"{name} received {s['received']} items"
         if s["mean_age_ms"] is not None:
             text += f", on average {s['mean_age_ms']:.1f} ms old when they arrived"
+        if s["time_avg_age_ms"] is not None:
+            text += (
+                f". Counting the time it held each one, its data was on average {s['time_avg_age_ms']:.1f} ms old"
+                f" and at worst {s['peak_age_ms']:.1f} ms old"
+            )
         extras = []
+        if s["stale_input"]:
+            extras.append(
+                f"its {s['stale_input']} data was older than it tolerates for {s['stale_s']:.2f} s of the run"
+            )
         if s["estimated"]:
             extras.append(f"{s['estimated']} of them were estimates, not real samples")
         if s["late"]:
@@ -183,13 +223,12 @@ def findings(summary: dict[str, Any]) -> list[str]:
 def render_text(summary: dict[str, Any], max_events: int = 12) -> str:
     """The summary as a plain-text table, for the terminal."""
     lines = [
-        f"{'subsystem':<17}{'native bus':<18}{'received':>9}{'estimated':>10}{'mean age':>10}{'late':>6}  issues"
+        f"{'subsystem':<17}{'native bus':<18}{'received':>9}{'estimated':>10}{'mean age':>10}{'avg age':>10}{'peak age':>10}{'late':>6}  issues"
     ]
     for name, s in summary["subsystems"].items():
-        mean = f"{s['mean_age_ms']:.1f} ms" if s["mean_age_ms"] is not None else "-"
         issues = "; ".join(s["issues"]) or "none"
         lines.append(
-            f"{name:<17}{s['protocol']:<18}{s['received']:>9}{s['estimated']:>10}{mean:>10}{s['late']:>6}  {issues}"
+            f"{name:<17}{s['protocol']:<18}{s['received']:>9}{s['estimated']:>10}{_text_ms(s['mean_age_ms']):>10}{_text_ms(s['time_avg_age_ms']):>10}{_text_ms(s['peak_age_ms']):>10}{s['late']:>6}  {issues}"
         )
     b = summary.get("bridge")
     if b:

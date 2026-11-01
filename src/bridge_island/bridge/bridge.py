@@ -120,6 +120,18 @@ class Bridge:
 
     def start(self) -> None:
         """Report removed baseline elements to the affected subsystems, and start monitoring."""
+        if self.oiu.rt.address is None:
+            raise InterfaceMismatch("no baseline is attached: call attach_baseline() first")
+        mapped = (
+            {s for _, s, _, _ in self.mapping.DOWNLINKS}
+            | {s for _, s, _, _ in self.mapping.UNAVAILABLE}
+            | {s for s, _, _ in self.mapping.UPLINKS}
+        )
+        missing = sorted(mapped - set(self.uid.subsystems))
+        if missing:  # otherwise the first datum for them would crash the run, much later
+            raise InterfaceMismatch(
+                f"the mapping refers to subsystems that are not attached: {missing}"
+            )
         for ref, sub, native, reason in self.mapping.UNAVAILABLE:
             self.log.add(
                 self.sched.now,

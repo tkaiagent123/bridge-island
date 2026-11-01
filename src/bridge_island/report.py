@@ -301,7 +301,8 @@ def build_report(
                     s["received"],
                     s["estimated"],
                     _fmt(s["mean_age_ms"]),
-                    _fmt(s["max_age_ms"]),
+                    _fmt(s["time_avg_age_ms"]),
+                    _fmt(s["peak_age_ms"]),
                     s["late"],
                     issues,
                 ]
@@ -314,13 +315,14 @@ def build_report(
                     "Native bus",
                     "Received",
                     "Estimated",
-                    "Mean age (ms)",
-                    "Max age (ms)",
+                    "Age at arrival (ms)",
+                    "Average age over time (ms)",
+                    "Peak age (ms)",
                     "Late",
                     "Issues",
                 ],
                 rows,
-                numeric={2, 3, 4, 5, 6},
+                numeric={2, 3, 4, 5, 6, 7},
             )
         )
         body.append("<h3>Age of the data at delivery</h3>")

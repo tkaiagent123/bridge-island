@@ -125,7 +125,7 @@ def translate_up(
 ) -> tuple[str, dict[str, Any]]:
     if sender == 'BedsideDisplay' and message_name == 'show_view':
         if set(values) != {'brightness', 'view'}:
-            raise MalformedError("show_view: unexpected or missing fields")
+            raise MalformedError('show_view: unexpected or missing fields')
         out: dict[str, Any] = {}
         check_type(values['view'], 'enum')
         v0 = values['view']

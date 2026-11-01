@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 from types import ModuleType
 
-from bridge_island.codegen import dictionary_for_spec, generate_file, load_module
+from bridge_island.codegen import load_module
 
 EXAMPLES = {"aviation": "aviation_invented", "medical": "medical_device_invented"}
 
@@ -37,8 +37,3 @@ def spec_path(world: ModuleType, version: int) -> Path:
 
 def generated_path(world: ModuleType, version: int) -> Path:
     return Path(world.HERE) / "generated" / f"mapping_v{version}.py"
-
-
-def regenerate(world: ModuleType, version: int) -> Path:
-    spec = spec_path(world, version)
-    return generate_file(spec, dictionary_for_spec(spec))

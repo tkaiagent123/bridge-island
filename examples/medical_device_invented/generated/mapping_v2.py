@@ -65,7 +65,7 @@ def translate(
             errors.append(('PumpState.total_volume_ml', str(exc)))
         try:
             v0 = values['line_pressure']
-            v1 = (v0 * 0.01933677470462983 + 0.0)
+            v1 = (v0 * 0.019336777459462117 + 0.0)
             out.append(('PumpState.line_pressure', 'DoseAdvisor', 'pressure_psi', v1, False))
         except (TransformError, KeyError) as exc:
             errors.append(('PumpState.line_pressure', str(exc)))
@@ -81,7 +81,7 @@ def translate(
             errors.append(('PumpState.total_volume_ml', str(exc)))
         try:
             v0 = values['line_pressure']
-            v1 = (v0 * 0.1333223684211 + 0.0)
+            v1 = (v0 * 0.133322387415 + 0.0)
             out.append(('PumpState.line_pressure', 'BedsideDisplay', 'pressure_kpa', v1, False))
         except (TransformError, KeyError) as exc:
             errors.append(('PumpState.line_pressure', str(exc)))
@@ -123,7 +123,7 @@ def translate_up(
 ) -> tuple[str, dict[str, Any]]:
     if sender == 'BedsideDisplay' and message_name == 'show_view':
         if set(values) != {'brightness', 'view'}:
-            raise MalformedError("show_view: unexpected or missing fields")
+            raise MalformedError('show_view: unexpected or missing fields')
         out: dict[str, Any] = {}
         check_type(values['view'], 'enum')
         v0 = values['view']

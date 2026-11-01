@@ -19,6 +19,7 @@ import json
 import secrets
 import tempfile
 import threading
+import traceback
 import webbrowser
 from collections import OrderedDict
 from collections.abc import Callable, Mapping
@@ -43,16 +44,18 @@ from bridge_island.scenario import (
     fault_messages,
     manifest,
     parse_scenario,
+    parse_scenario_text,
     run_scenario,
 )
 from bridge_island.summary import findings, summarize, trace_csv_text, trace_rows
 from bridge_island.system import System
+from bridge_island.yamlutil import YamlError, load_yaml
 
 E = html.escape
 MAX_DURATION_S = 120.0
 MAX_TRIALS = 2000
 MAX_BODY = 256 * 1024
-KEEP_RESULTS = 25
+KEEP_RESULTS = 12
 NOTE = "All content is invented. Numbers are synthetic, illustrative."
 
 NAV = [
@@ -193,6 +196,10 @@ class Response:
     headers: dict[str, str] = field(default_factory=dict)
 
 
+def _one_decimal(value: float | None) -> str:
+    return "-" if value is None else f"{value:.1f}"
+
+
 def _first(form: Mapping[str, list[str]], key: str, default: str = "") -> str:
     values = form.get(key)
     return values[0].strip() if values else default
@@ -255,6 +262,16 @@ class App:
                 return self._post(url.path, form)
         except ScenarioError as exc:
             return self._page("Something to fix", self._error_html(str(exc)), "/", status=200)
+        except FileNotFoundError as exc:
+            message = (
+                "The example files were not found. Run the app from a clone of the repository, "
+                f"or set BRIDGE_ISLAND_EXAMPLES. ({exc})"
+            )
+            return self._page("Examples not found", self._error_html(message), "/", status=200)
+        except Exception:  # last line of defence: one bad request must not take the app down
+            traceback.print_exc()
+            message = "Something went wrong inside the app. The details are in the black window."
+            return self._page("Something went wrong", self._error_html(message), "/", status=500)
         return self._plain(405, "Method not allowed.")
 
     @staticmethod
@@ -449,7 +466,11 @@ sentences what happened. Nothing is saved on your computer unless you download i
     # ---- running -------------------------------------------------------------------------
 
     def _simulate(self, data: Any, source: str) -> tuple[Scenario, System, ModuleType, int]:
-        scenario = parse_scenario(data, source)
+        scenario = (
+            parse_scenario_text(data, source)
+            if isinstance(data, str)
+            else parse_scenario(data, source)
+        )
         world = load_world(scenario.example)
         with self._lock:
             system, version = run_scenario(scenario, world)
@@ -477,14 +498,15 @@ sentences what happened. Nothing is saved on your computer unless you download i
         )
         rows = []
         for name, s in summary["subsystems"].items():
-            mean = "-" if s["mean_age_ms"] is None else f"{s['mean_age_ms']:.1f}"
             rows.append(
                 [
                     name,
                     s["protocol"],
                     s["received"],
                     s["estimated"],
-                    mean,
+                    _one_decimal(s["mean_age_ms"]),
+                    _one_decimal(s["time_avg_age_ms"]),
+                    _one_decimal(s["peak_age_ms"]),
                     s["late"],
                     "; ".join(s["issues"]) or "none",
                 ]
@@ -508,18 +530,20 @@ sentences what happened. Nothing is saved on your computer unless you download i
             f'<div class="card"><h2>What happened</h2><ul class="found">{found}</ul></div>'
             "<h2>What each system received</h2>"
             + table(
-                "Counts and the age of the data when it arrived",
+                "Counts, and how old the data was: when it arrived, on average over time, and at worst",
                 [
                     "System",
                     "Native bus",
                     "Received",
                     "Estimated",
-                    "Mean age (ms)",
+                    "Age at arrival (ms)",
+                    "Average age (ms)",
+                    "Peak age (ms)",
                     "Late",
                     "Problems",
                 ],
                 rows,
-                numeric={2, 3, 4, 5},
+                numeric={2, 3, 4, 5, 6, 7},
             )
             + "<h2>Age of the data over time</h2>"
             + age_charts("app", list(summary["subsystems"]), trace, scenario.duration_s)
@@ -552,9 +576,9 @@ sentences what happened. Nothing is saved on your computer unless you download i
         try:
             for p in sorted((examples_dir() / "scenarios").glob("*.yaml")):
                 text = p.read_text(encoding="utf-8")
-                data = yaml.safe_load(text) or {}
+                data = load_yaml(text) or {}
                 out[p.name] = (str(data.get("description", "")), text)
-        except FileNotFoundError:
+        except (FileNotFoundError, YamlError):
             pass
         return out
 
@@ -579,23 +603,17 @@ shipped files, or paste your own.</p>
 <p><button type="submit">Run the pasted scenario</button></p></form>
 <h2>The shipped files</h2>{details}
 <script>document.getElementById('file').addEventListener('change',function(e){{var f=e.target.files[0];if(!f)return;
-var r=new FileReader();r.onload=function(){{document.getElementById('yaml').value=r.result}};r.readAsText(f)}});</script>"""
+var r=new FileReader();r.onload=function(){{document.getElementById('yaml').value=r.result}};r.readAsText(f)}});</script>"""  # noqa: S608  (HTML text, not a query)
 
     def _run_scenario_form(self, form: Mapping[str, list[str]]) -> Response:
         text = form.get("yaml", [""])[0]
-        if text.strip():
-            try:
-                data = yaml.safe_load(text)
-            except yaml.YAMLError as exc:
-                raise ScenarioError(f"That is not valid YAML: {exc}") from exc
-        else:
+        if not text.strip():
             shipped = self._shipped()
             name = _first(form, "name")
             if name not in shipped:  # only names from the shipped list are accepted, never a path
                 raise ScenarioError("Choose a scenario from the list.")
             text = shipped[name][1]
-            data = yaml.safe_load(text)
-        scenario, system, world, version = self._simulate(data, "the scenario")
+        scenario, system, world, version = self._simulate(text, "the scenario")
         header = f"<p>{E(scenario.description)}</p>" if scenario.description else ""
         body = header + self._results_html(scenario, system, world, version, text)
         return self._page("Result", body, "/scenarios")
@@ -801,23 +819,31 @@ nothing is sent anywhere.</p>"""
 def make_handler(app: App) -> type[BaseHTTPRequestHandler]:
     class Handler(BaseHTTPRequestHandler):
         server_version = "bridge-island"
+        timeout = 15  # seconds: a client that stalls cannot hold a thread for ever
 
         def _send(self, resp: Response) -> None:
+            # Only our own page has a script, written as a bare <script>; user text is escaped.
+            # Each response gets a fresh nonce, and a page without a script allows none.
+            body, script_src = resp.body, "'none'"
+            if b"<script>" in body:
+                nonce = secrets.token_urlsafe(16)
+                body = body.replace(b"<script>", f'<script nonce="{nonce}">'.encode(), 1)
+                script_src = f"'nonce-{nonce}'"
             self.send_response(resp.status)
             self.send_header("Content-Type", resp.content_type)
-            self.send_header("Content-Length", str(len(resp.body)))
+            self.send_header("Content-Length", str(len(body)))
             self.send_header("Cache-Control", "no-store")
             self.send_header("X-Content-Type-Options", "nosniff")
             self.send_header("Referrer-Policy", "no-referrer")
             self.send_header(
                 "Content-Security-Policy",
-                "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; "
+                f"default-src 'none'; style-src 'unsafe-inline'; script-src {script_src}; "
                 "img-src data:; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
             )
             for key, value in resp.headers.items():
                 self.send_header(key, value)
             self.end_headers()
-            self.wfile.write(resp.body)
+            self.wfile.write(body)
 
         def _dispatch(self, method: str, body: bytes = b"") -> None:
             self._send(app.handle(method, self.path, dict(self.headers.items()), body))
@@ -826,8 +852,17 @@ def make_handler(app: App) -> type[BaseHTTPRequestHandler]:
             self._dispatch("GET")
 
         def do_POST(self) -> None:
-            length = int(self.headers.get("Content-Length") or 0)
-            self._dispatch("POST", self.rfile.read(min(length, MAX_BODY + 1)))
+            try:
+                length = int(self.headers.get("Content-Length") or 0)
+            except ValueError:
+                length = -1
+            if length < 0:
+                self._send(App._plain(400, "Bad request: the Content-Length is not valid."))
+                return
+            if length > MAX_BODY:  # refuse at once: do not wait for a body we would not accept
+                self._send(App._plain(413, "That request is too large."))
+                return
+            self._dispatch("POST", self.rfile.read(length))
 
         def log_message(self, format: str, *args: Any) -> None:
             pass  # keep the window quiet

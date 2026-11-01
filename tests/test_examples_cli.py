@@ -52,7 +52,7 @@ def test_medical_v2_conversions_are_correct() -> None:
     rec = system.subsystems["DoseAdvisor"].latest("pressure_psi")
     assert rec is not None
     mmhg = pump(rec.datum.source_time)["line_pressure"]
-    assert rec.datum.value == pytest.approx(mmhg * 0.1333223684211 / 6.894757293168361)
+    assert rec.datum.value == pytest.approx(mmhg * 0.133322387415 / 6.894757293168361)
     code = system.subsystems["AlarmRelay"].latest("alarm_code")
     assert code is not None and code.datum.value == 0  # "NONE" became the numeric code
     mode = system.subsystems["BedsideDisplay"].latest("mode_name")

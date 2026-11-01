@@ -371,6 +371,19 @@ def test_the_real_server_binds_locally_sends_safe_headers_and_serves_forms() -> 
         assert resp.status == 200 and "What happened" in resp.read().decode()
         conn.request("GET", "/", headers={"Host": "evil.example"})
         assert conn.getresponse().status == 403  # DNS-rebinding style request
+        assert "script-src 'none'" in csp  # the home page has no script, so none may run
+        nonces = []
+        for _ in range(2):  # the one page with a script: allowed by a nonce that differs every time
+            conn.request("GET", "/scenarios")
+            resp = conn.getresponse()
+            page = resp.read().decode()
+            nonce = re.search(
+                r"script-src 'nonce-([^']+)'", resp.getheader("Content-Security-Policy") or ""
+            )
+            assert nonce and f'<script nonce="{nonce.group(1)}">' in page and "<script>" not in page
+            assert "unsafe-inline'; img" not in (resp.getheader("Content-Security-Policy") or "")
+            nonces.append(nonce.group(1))
+        assert nonces[0] != nonces[1]
         conn.close()
     finally:
         server.shutdown()

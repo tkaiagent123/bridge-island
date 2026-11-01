@@ -171,7 +171,7 @@ def translate_up(
 ) -> tuple[str, dict[str, Any]]:
     if sender == 'PlanningDisplay' and message_name == 'show_page':
         if set(values) != {'page', 'priority'}:
-            raise MalformedError("show_page: unexpected or missing fields")
+            raise MalformedError('show_page: unexpected or missing fields')
         out: dict[str, Any] = {}
         check_type(values['page'], 'enum')
         v0 = values['page']

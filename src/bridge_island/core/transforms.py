@@ -6,8 +6,9 @@ generator (``expr``), and say how it changes a representation (``output``).
 
 from __future__ import annotations
 
+import math
 from abc import ABC, abstractmethod
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from typing import Any, NoReturn
 
@@ -121,6 +122,12 @@ class ScaleOffset(Transform):
 class UnitConversion(Transform):
     src: str
     dst: str
+
+    def __post_init__(self) -> None:
+        try:  # fail where the units are written, not later when the code is generated
+            units.coefficients(self.src, self.dst)
+        except units.UnitError as exc:
+            raise TransformError(str(exc)) from exc
 
     def apply(self, value: float) -> float:
         scale, offset = units.coefficients(self.src, self.dst)
@@ -312,27 +319,113 @@ def chain(*steps: Transform) -> Chain:
     return Chain(tuple(s for s in steps if not s.is_identity))
 
 
+def _finite(value: Any, what: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+        raise TransformError(f"{what} must be a finite number, got {value!r}")
+    return float(value)
+
+
+def _pair(arg: Any, what: str) -> tuple[Any, Any]:
+    if not isinstance(arg, (list, tuple)) or len(arg) != 2:
+        raise TransformError(f"{what} needs exactly two values in a list, got {arg!r}")
+    return arg[0], arg[1]
+
+
+def _build_unit(arg: Any) -> Transform:
+    src, dst = _pair(arg, "unit")
+    if not isinstance(src, str) or not isinstance(dst, str):
+        raise TransformError(f"unit needs two unit names, got {arg!r}")
+    return UnitConversion(src, dst)
+
+
+def _build_scale_offset(arg: Any) -> Transform:
+    if (
+        not isinstance(arg, dict)
+        or "scale" not in arg
+        or set(arg) - {"scale", "offset", "to_units"}
+    ):
+        raise TransformError(
+            f"scale_offset needs 'scale' (and optionally 'offset', 'to_units'): {arg!r}"
+        )
+    to_units = arg.get("to_units")
+    if to_units is not None and not isinstance(to_units, str):
+        raise TransformError(f"to_units must be text, got {to_units!r}")
+    return ScaleOffset(
+        _finite(arg["scale"], "scale"), _finite(arg.get("offset", 0.0), "offset"), to_units
+    )
+
+
+def _build_enum(arg: Any) -> Transform:
+    scalar = (str, int, float, bool)
+    mapping = arg.get("map") if isinstance(arg, dict) else None
+    if not isinstance(mapping, dict) or not mapping or set(arg) - {"map", "to_encoding"}:
+        raise TransformError(
+            f"enum needs a non-empty 'map' (and optionally 'to_encoding'): {arg!r}"
+        )
+    if not all(isinstance(k, scalar) and isinstance(v, scalar) for k, v in mapping.items()):
+        raise TransformError("enum keys and values must be text, numbers or booleans")
+    to_encoding = arg.get("to_encoding")
+    if to_encoding is not None and not isinstance(to_encoding, str):
+        raise TransformError(f"to_encoding must be text, got {to_encoding!r}")
+    return EnumMapping(tuple(mapping.items()), to_encoding)
+
+
+def _bits(arg: Any) -> int:
+    if isinstance(arg, bool) or not isinstance(arg, int) or not 1 <= arg <= 32:
+        raise TransformError(f"the number of bits must be an integer from 1 to 32, got {arg!r}")
+    return arg
+
+
+def _build_fields(arg: Any) -> tuple[tuple[str, int], ...]:
+    if not isinstance(arg, list) or not arg:
+        raise TransformError("bit fields need a non-empty list of [name, width] pairs")
+    fields = []
+    for item in arg:
+        name, width = _pair(item, "a bit field")
+        if (
+            not isinstance(name, str)
+            or isinstance(width, bool)
+            or not isinstance(width, int)
+            or width < 1
+        ):
+            raise TransformError(f"a bit field is [name, width in bits >= 1], got {item!r}")
+        fields.append((name, width))
+    if len({n for n, _ in fields}) != len(fields) or sum(w for _, w in fields) > 64:
+        raise TransformError("bit field names must be unique and the total width at most 64 bits")
+    return tuple(fields)
+
+
+def _build_valid_range(arg: Any) -> Transform:
+    lo, hi = _pair(arg, "valid_range")
+    lo, hi = _finite(lo, "the lower limit"), _finite(hi, "the upper limit")
+    if lo > hi:
+        raise TransformError(f"valid_range lower limit {lo} is above the upper limit {hi}")
+    return ValidityCheck(lo, hi)
+
+
+_BUILDERS: dict[str, Callable[[Any], Transform]] = {
+    "unit": _build_unit,
+    "scale_offset": _build_scale_offset,
+    "enum": _build_enum,
+    "bam_decode": lambda arg: BamDecode(_bits(arg)),
+    "bam_encode": lambda arg: BamEncode(_bits(arg)),
+    "bit_unpack": lambda arg: BitUnpack(_build_fields(arg)),
+    "bit_pack": lambda arg: BitPack(_build_fields(arg)),
+    "valid_range": _build_valid_range,
+}
+
+
 def from_spec(spec: Any) -> Transform:
-    """Build a transform from one YAML mapping-spec entry. Anything else is not permitted."""
-    if spec == "identity":
+    """Build a transform from one YAML mapping-spec entry.
+
+    Raises :class:`TransformError`, and nothing else, for anything that is not a permitted,
+    well-formed transform.
+    """
+    if isinstance(spec, str) and spec == "identity":
         return Identity()
     if isinstance(spec, dict) and len(spec) == 1:
         ((kind, arg),) = spec.items()
-        if kind == "unit":
-            return UnitConversion(str(arg[0]), str(arg[1]))
-        if kind == "scale_offset":
-            return ScaleOffset(
-                float(arg["scale"]), float(arg.get("offset", 0.0)), arg.get("to_units")
-            )
-        if kind == "enum":
-            return EnumMapping(tuple(arg["map"].items()), arg.get("to_encoding"))
-        if kind == "bam_decode":
-            return BamDecode(int(arg))
-        if kind == "bam_encode":
-            return BamEncode(int(arg))
-        if kind in ("bit_unpack", "bit_pack"):
-            fields = tuple((str(n), int(w)) for n, w in arg)
-            return BitUnpack(fields) if kind == "bit_unpack" else BitPack(fields)
-        if kind == "valid_range":
-            return ValidityCheck(float(arg[0]), float(arg[1]))
+        builder = _BUILDERS.get(kind) if isinstance(kind, str) else None
+        if builder is not None:
+            return builder(arg)
     raise TransformError(f"transform not permitted: {spec!r}")

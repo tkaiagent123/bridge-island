@@ -68,4 +68,4 @@ class HealthMonitor:
 
     def _event(self, kind: str, subject: str, detail: str) -> None:
         self.log.add(self.sched.now, "health", f"health.{kind}", f"{subject}: {detail}")
-        self.announce(subject, kind, detail)
+        self.announce(subject, kind, f"{subject}: {detail}")  # say which message it is about

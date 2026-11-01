@@ -7,6 +7,7 @@ label-word bus, publisher on a pub/sub bus.
 
 from __future__ import annotations
 
+import math
 from collections import deque
 from collections.abc import Callable
 from typing import Any, Protocol
@@ -169,6 +170,40 @@ _PORTS: dict[str, Any] = {
 }
 
 
+_HALF_TURN = {"deg": 180.0, "rad": math.pi}
+
+
+def estimate(
+    encoding: str,
+    units: str,
+    history: list[tuple[float, Any]],
+    now: float,
+    limit: float | None = None,
+) -> tuple[bool, Any]:
+    """Estimate a value at ``now`` from the last one or two real samples ``(time, value)``.
+
+    Returns ``(True, value)`` or ``(False, None)`` when no estimate should be made. Floats are
+    extrapolated linearly, other encodings (integer codes, enums, booleans) are held. No estimate
+    is made later than ``limit`` seconds after the last real sample (default: 1.5 source
+    periods), so a dead source is not masked, nor across what looks like an angle wrapping
+    round, where a straight line would be badly wrong.
+    """
+    t1, v1 = history[-1]
+    if limit is None:
+        limit = 1.5 * (t1 - history[0][0]) if len(history) == 2 else 0.0
+    if now - t1 > limit:
+        return False, None
+    if not encoding.startswith("float"):
+        return True, v1
+    if len(history) < 2 or t1 <= history[0][0]:
+        return False, None
+    t0, v0 = history[0]
+    half_turn = _HALF_TURN.get(units)
+    if half_turn is not None and abs(v1 - v0) > half_turn:
+        return False, None
+    return True, v1 + (v1 - v0) / (t1 - t0) * (now - t1)
+
+
 class UniqueInterfaceDistributor:
     island = "bridge"
 
@@ -262,24 +297,20 @@ class UniqueInterfaceDistributor:
             self.sent += 1
             return
         need = self.subsystems[subsystem].need(native)
+        if need is None:
+            return
         history = self._history[key]
         now = self.sched.now
-        t1, v1 = history[-1]
-        # How far past the last real sample to go: an explicit limit, else 1.5 source periods
-        # (enough to bridge the gap to the next expected sample, with a little margin).
-        limit = self.max_extrapolation_s
-        if limit is None:
-            limit = 1.5 * (t1 - history[0][0]) if len(history) == 2 else 0.0
-        if need is None or now - t1 > limit:
-            return  # too long since a real sample: stop, so a dead source is not masked
-        value = v1  # integer codes, enums and booleans are held
-        if need.representation.encoding.startswith("float"):
-            t0, v0 = history[0]
-            if len(history) < 2 or t1 <= t0:
-                return
-            value = v1 + (v1 - v0) / (t1 - t0) * (now - t1)
-        self.estimates += 1
-        self._ports[subsystem].send(native, Datum(native, value, now, True, t1))
+        ok, value = estimate(
+            need.representation.encoding,
+            need.representation.units,
+            list(history),
+            now,
+            self.max_extrapolation_s,
+        )
+        if ok:
+            self.estimates += 1
+            self._ports[subsystem].send(native, Datum(native, value, now, True, history[-1][0]))
 
     def deliver_unavailable(self, subsystem: str, native: str, reason: str) -> None:
         self._ports[subsystem].send_status(("unavailable", native, reason))

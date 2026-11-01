@@ -25,6 +25,18 @@ uv run mypy
 uv run python scripts/release_check.py
 ```
 
+Two heavier checks are not part of the normal run:
+
+```powershell
+uv run python scripts/mutation_check.py --sample 300 --jobs 4   # does a test notice each deliberate break?
+uv run --with bandit bandit -q -r src -ll                        # security scan (one known false positive is marked)
+```
+
+`mutation_check.py` changes the code on purpose (`<` to `<=`, `+` to `-`, a constant by one ...) and
+reports every change that no test noticed. If you add behaviour, add a test that fails when it is
+broken. Please also read `docs/rationale.md` ("Critical review"), which lists what the evidence here
+does and does not show.
+
 Everything is cross-platform. Helper tasks are Python scripts, not shell scripts.
 
 ## Pull requests

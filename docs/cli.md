@@ -55,7 +55,7 @@ caveats in [Experiments](experiments.md#2-change-impact). `--from` and `--to` ch
 ## `report`
 
 Writes one HTML file that you can open offline, e-mail or print. It contains the architecture, the
-G1 to G6 results for every baseline version, a table of what each unique system received, a chart
+G1 to G6 results for every baseline version, a table of what each unique system received (age at arrival, average age over time, peak age), a chart
 per system of the age of its data, the full mapping with identity and converted paths marked, the
 Bridge's event log, and what the version change touches. Options: `--seed`, `--duration`,
 `--rate-policy cap|extrapolate`, and `--stall AT,DURATION` to stall the Bridge during the run.
