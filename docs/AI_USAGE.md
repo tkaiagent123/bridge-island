@@ -39,6 +39,7 @@ search and fetch; the author has not yet verified them independently.
 | Point-to-point and analysis | `src/bridge_island/p2p`, `analysis`, `experiments.py` | Claude Sonnet 5.5 | Wrote the comparison, the counting model and the four experiments | Counting model approved by the author on 2026-10-27, with two caveats now stated in the documentation; the rest pending |
 | Tests | `tests/` | Claude Sonnet 5.5 | Wrote all tests, including the executable tutorial | Pending |
 | Documentation | `docs/`, `README.md`, `CHANGELOG.md` | Claude Sonnet 5.5 | Wrote all pages and verified the public references | Pending |
+| Scenarios, reports and CLI | `src/bridge_island/{scenario,summary,describe,diffing,report,term,cli}.py`, `examples/scenarios/`, `docs/cli.md`, `docs/scenarios.md` | Claude Sonnet 5.5 | Researched command-line, JOSS and accessibility guidance, then designed and wrote the commands, the report and the scenario format, at the author's request on 2026-11-01 | Pending |
 | Release preparation | local tag, clearance package, release checklist (all git-ignored or local) | Claude Sonnet 5.5 | Prepared; nothing was published | Pending |
 
 "Pending" becomes "Reviewed" only after the author's review pass of that area.

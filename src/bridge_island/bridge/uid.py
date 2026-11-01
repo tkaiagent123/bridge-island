@@ -179,14 +179,15 @@ class UniqueInterfaceDistributor:
         log: EventLog,
         on_uplink: Uplink,
         rate_policy: str = "cap",
-        max_extrapolation_s: float = 0.2,
+        max_extrapolation_s: float | None = None,
         is_running: Callable[[], bool] = lambda: True,
     ) -> None:
         """``rate_policy`` says what to do when a subsystem can use a higher rate than the
         baseline supplies: ``"cap"`` delivers only real samples, at most at the subsystem's rate;
         ``"extrapolate"`` delivers one item per period of the subsystem's rate: the freshest real
         sample if one arrived, otherwise an *estimate* (linear for floats, hold for other
-        encodings), for at most ``max_extrapolation_s`` after the last real sample. A source that
+        encodings), for at most ``max_extrapolation_s`` after the last real sample (default: 1.5
+        periods of that input's source, so a dead source is not masked). A source that
         is already as fast as the subsystem needs is handled exactly as with ``"cap"``. Neither
         policy creates information the baseline did not send: both keep the interface working."""
         if rate_policy not in ("cap", "extrapolate"):
@@ -237,11 +238,15 @@ class UniqueInterfaceDistributor:
             return True
         self._gridded.discard(key)
         self._pending.pop(key, None)
+        # The cap is measured in *source* time: it limits the rate of the data, not of its
+        # arrival. (Measured in arrival time, a message released late after a stall would use up
+        # the slot and a fresh one 0.3 s later would be dropped.) If source time goes backwards,
+        # for example after a source restart, accept the datum and start counting again.
         last = self._last_sent.get(key)
-        if last is not None and self.sched.now - last < 1.0 / need.rate_hz - 1e-9:
+        if last is not None and 0 <= datum.source_time - last < period - 1e-6:
             self.decimated += 1
             return False
-        self._last_sent[key] = self.sched.now
+        self._last_sent[key] = datum.source_time
         self._ports[subsystem].send(datum.element, datum)
         self.sent += 1
         return True
@@ -260,7 +265,12 @@ class UniqueInterfaceDistributor:
         history = self._history[key]
         now = self.sched.now
         t1, v1 = history[-1]
-        if need is None or now - t1 > self.max_extrapolation_s:
+        # How far past the last real sample to go: an explicit limit, else 1.5 source periods
+        # (enough to bridge the gap to the next expected sample, with a little margin).
+        limit = self.max_extrapolation_s
+        if limit is None:
+            limit = 1.5 * (t1 - history[0][0]) if len(history) == 2 else 0.0
+        if need is None or now - t1 > limit:
             return  # too long since a real sample: stop, so a dead source is not masked
         value = v1  # integer codes, enums and booleans are held
         if need.representation.encoding.startswith("float"):

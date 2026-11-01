@@ -120,7 +120,7 @@ Bridge.
     | | `cap` (default) | `extrapolate` |
     | --- | --- | --- |
     | What the subsystem receives | Only real samples, at the baseline's rate | One item per period of its own rate: the freshest real sample, or else an *estimate* |
-    | Estimates | None | Linear for floats, held for integer codes, enums and booleans; never beyond a time limit after the last real sample (default 0.2 s), so a dead source is not masked |
+    | Estimates | None | Linear for floats, held for integer codes, enums and booleans; never beyond a time limit after the last real sample (default: 1.5 periods of that input's source, or set `max_extrapolation_s`), so a dead source is not masked |
     | Marking | n/a | Every estimate has `estimated=True` and a `basis_time`; its age is measured from the real sample it is based on |
     | Example below | 20 per second | 49.8 per second, 60% estimated |
     | Age of real samples | 6.7 ms | 21.7 ms (they wait for their slot) |

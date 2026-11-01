@@ -63,3 +63,17 @@ Generated from the docstrings.
 ::: bridge_island.rules
 
 ::: bridge_island.experiments
+
+## Scenarios, summaries and reports
+
+::: bridge_island.scenario
+
+::: bridge_island.summary
+
+::: bridge_island.describe
+
+::: bridge_island.diffing
+
+::: bridge_island.report
+
+::: bridge_island.term

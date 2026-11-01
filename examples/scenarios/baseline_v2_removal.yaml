@@ -1,0 +1,6 @@
+name: baseline_v2_removal
+description: Baseline interface v2 removes an element. The affected subsystem is told, instead of failing silently.
+example: aviation
+version: 2
+seed: 1
+duration_s: 5

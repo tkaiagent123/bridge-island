@@ -26,6 +26,8 @@ nav:
   - Concepts: concepts.md
   - Tutorial: tutorial.md
   - Examples: examples.md
+  - Command-line reference: cli.md
+  - Scenarios: scenarios.md
   - Experiments: experiments.md
   - Design rationale and limitations: rationale.md
   - Related work: related-work.md

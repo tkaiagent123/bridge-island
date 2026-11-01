@@ -1,0 +1,8 @@
+name: extrapolate_rate_policy
+description: A 50 Hz subsystem fed by a 20 Hz source, with estimates filling the gaps. Neither rate policy meets the full need; see the 'estimated' and 'late' columns.
+example: aviation
+version: 1
+seed: 1
+duration_s: 6
+bridge:
+  rate_policy: extrapolate

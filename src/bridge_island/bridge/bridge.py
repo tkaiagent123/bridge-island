@@ -47,7 +47,7 @@ class Bridge:
         processing_delay_s: float = 0.001,
         name: str = "bridge",
         rate_policy: Literal["cap", "extrapolate"] = "cap",
-        max_extrapolation_s: float = 0.2,
+        max_extrapolation_s: float | None = None,
     ) -> None:
         self.name = name
         self.sched = sched

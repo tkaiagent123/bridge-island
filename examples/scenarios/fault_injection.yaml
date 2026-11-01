@@ -1,0 +1,11 @@
+name: fault_injection
+description: A faulty add-on module sends one valid request and three bad ones. The Bridge blocks the bad ones, and the baseline never sees them.
+example: medical
+version: 1
+seed: 1
+duration_s: 4
+events:
+  - {at: 1.0, send: {from: BedsideDisplay, message: show_view, values: {view: SUMMARY, brightness: 5}}}
+  - {at: 1.5, send: {from: BedsideDisplay, message: show_view, values: {view: SUMMARY, brightness: 99}}}
+  - {at: 2.0, send: {from: BedsideDisplay, message: set_rate, values: {ml_per_h: 900}}}
+  - {at: 2.5, send: {from: BedsideDisplay, message: DisplayRequest, values: {view_id: 99, brightness: 0}}}

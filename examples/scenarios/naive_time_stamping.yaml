@@ -1,0 +1,10 @@
+name: naive_time_stamping
+description: The same stall, but the Translator Module stamps delivery time (the error G3 forbids). Compare the 'late' column with stall_and_resume.
+example: aviation
+version: 1
+seed: 1
+duration_s: 8
+bridge:
+  time_tag: delivery
+events:
+  - {at: 2.2, stall: 1.5}

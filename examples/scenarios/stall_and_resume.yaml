@@ -1,0 +1,8 @@
+name: stall_and_resume
+description: The Bridge stalls for 1.5 s. The health monitor annunciates it, and the held 1 Hz message arrives visibly old.
+example: aviation
+version: 1
+seed: 1
+duration_s: 8
+events:
+  - {at: 2.2, stall: 1.5}
