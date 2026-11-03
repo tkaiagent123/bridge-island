@@ -40,17 +40,19 @@ The page across the top has six tabs.
 
 ![A result page: What happened, a table of what each system received, and charts of the age of the data](images/app-result.png)
 
-* **What happened** comes first, in sentences: what each system received, whether anything was late,
-  what the health monitor and the cyber monitor did, and whether anything bad reached the baseline.
-* **What each system received** is the same information as a table. *Late* means the data arrived
-  older than that system's own latency budget allows.
-  *Age at arrival* is how old each value was when it arrived, *Average age* is how old the system's
-  newest value was on average over the whole run, and *Peak age* is the oldest it ever got. A
-  system that waits for a slow source can look fine at arrival and still hold old data; read the
-  average and the peak ([how age is measured](concepts.md#how-age-is-measured)).
+* **The tiles across the top** are the headline: how many systems are OK, how much was delivered,
+  the worst peak age, how many deliveries were late, how many messages were blocked, and how many
+  things the Bridge noticed. A coloured edge plus a word shows whether to look closer.
+* **What happened** says the same in sentences.
+* **How each system fared** has one row per system with a status (a tick for OK, a triangle for
+  Watch, a cross for Problem; never colour alone), the reason, and two bars on one shared scale:
+  *Average age* is how old the system's newest value was on average over the whole run, and *Peak
+  age* is the oldest it ever got. A system can look fine at arrival and still hold old data, so read
+  both ([how age is measured](concepts.md#how-age-is-measured)).
 * **Age of the data over time** has one chart per system. Across is when the data arrived; up is how
-  old it was. A dot far above the others is old data. Systems use different marker shapes, and hollow
-  markers are estimates, so colour is never the only clue.
+  old it was. Hollow markers are estimates, and systems use different marker shapes.
+* **What the Bridge noticed** counts the events by kind, then lists them. *Show the full table* opens
+  every number behind the board.
 * **Keep the results** downloads what you need: the numbers (JSON), every datum (CSV), the settings as
   a scenario file you can run again, and a record of how to reproduce the run.
 * The form is repeated under the result, filled in with what you chose, so you can change one thing and

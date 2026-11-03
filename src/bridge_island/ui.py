@@ -34,9 +34,11 @@ import yaml
 
 import bridge_island
 from bridge_island import experiments
+from bridge_island.dashboard import CSS as DASHBOARD_CSS
+from bridge_island.dashboard import dashboard
 from bridge_island.examples import EXAMPLES, examples_dir, load_world
 from bridge_island.report import CSS as REPORT_CSS
-from bridge_island.report import age_charts, build_report, table
+from bridge_island.report import build_report, table
 from bridge_island.rules import check_rules
 from bridge_island.scenario import (
     Scenario,
@@ -293,7 +295,7 @@ class App:
         doc = (
             '<!doctype html><html lang="en"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width,initial-scale=1">'
-            f"<title>{E(title)} - bridge-island</title><style>{REPORT_CSS}{EXTRA_CSS}</style></head><body>"
+            f"<title>{E(title)} - bridge-island</title><style>{REPORT_CSS}{EXTRA_CSS}{DASHBOARD_CSS}</style></head><body>"
             '<a class="skip" href="#main">Skip to content</a><main id="main">'
             f'<header class="top"><strong>bridge-island {bridge_island.__version__}</strong>'
             f'<span class="muted">{E(NOTE)}</span></header><nav aria-label="Main">{nav}</nav>{body}'
@@ -496,21 +498,6 @@ sentences what happened. Nothing is saved on your computer unless you download i
                 "scenario.yaml": ("text/yaml; charset=utf-8", scenario_yaml.encode()),
             }
         )
-        rows = []
-        for name, s in summary["subsystems"].items():
-            rows.append(
-                [
-                    name,
-                    s["protocol"],
-                    s["received"],
-                    s["estimated"],
-                    _one_decimal(s["mean_age_ms"]),
-                    _one_decimal(s["time_avg_age_ms"]),
-                    _one_decimal(s["peak_age_ms"]),
-                    s["late"],
-                    "; ".join(s["issues"]) or "none",
-                ]
-            )
         ev = summary["bridge"]["events"]
         ev_rows = [[f"{e['time_s']:g}", e["kind"], e["detail"]] for e in ev[:40]]
         more = f" (first 40 of {len(ev)})" if len(ev) > 40 else ""
@@ -527,27 +514,11 @@ sentences what happened. Nothing is saved on your computer unless you download i
         return (
             f"<h1>Result: {E(scenario.example)}, baseline version {version}</h1>"
             f'<p class="banner">{E(NOTE)} {scenario.duration_s:g} s simulated, seed {scenario.seed}.</p>'
-            f'<div class="card"><h2>What happened</h2><ul class="found">{found}</ul></div>'
-            "<h2>What each system received</h2>"
-            + table(
-                "Counts, and how old the data was: when it arrived, on average over time, and at worst",
-                [
-                    "System",
-                    "Native bus",
-                    "Received",
-                    "Estimated",
-                    "Age at arrival (ms)",
-                    "Average age (ms)",
-                    "Peak age (ms)",
-                    "Late",
-                    "Problems",
-                ],
-                rows,
-                numeric={2, 3, 4, 5, 6, 7},
-            )
-            + "<h2>Age of the data over time</h2>"
-            + age_charts("app", list(summary["subsystems"]), trace, scenario.duration_s)
-            + (
+            + dashboard(
+                summary,
+                trace,
+                scenario.duration_s,
+                found,
                 table(
                     f"What the Bridge logged{more}",
                     ["Time (s)", "Kind", "Detail"],
@@ -555,7 +526,7 @@ sentences what happened. Nothing is saved on your computer unless you download i
                     numeric={0},
                 )
                 if ev_rows
-                else "<p>The Bridge logged nothing unusual.</p>"
+                else "",
             )
             + f"<h2>Keep the results</h2><p>{downloads}</p>"
             + form_html

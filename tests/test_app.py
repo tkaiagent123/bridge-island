@@ -125,7 +125,7 @@ def test_typed_text_is_escaped(app: App) -> None:
 
 def test_a_default_run_explains_itself_and_offers_downloads(app: App) -> None:
     page = text(post(app, "/run", example="aviation", version="1", duration="4", seed="1"))
-    assert "What happened" in page and "What each system received" in page
+    assert "What happened" in page and "How each system fared" in page
     assert page.count("<svg") == 4 and "Change something and run again" in page
     for name in ("summary.json", "trace.csv", "scenario.yaml", "manifest.json"):
         assert "/download/" in page and name in page

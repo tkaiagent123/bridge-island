@@ -95,6 +95,7 @@ max-complexity = 15
 "src/bridge_island/describe.py" = ["E501"]
 "src/bridge_island/diffing.py" = ["E501"]
 "src/bridge_island/report.py" = ["E501"]
+"src/bridge_island/dashboard.py" = ["E501"]
 "src/bridge_island/scenario.py" = ["E501"]
 "src/bridge_island/summary.py" = ["E501"]
 "src/bridge_island/ui.py" = ["E501"]

@@ -9,6 +9,7 @@ and the project follows [Semantic Versioning](https://semver.org/).
 ## [0.1.0] - TBD (set on release)
 
 ### Added
+- The app result page is now a dashboard: headline tiles, a status board with average and peak age bars on one scale (status is an icon plus a word), the age charts, and a count of what the Bridge noticed.
 - Project scaffold: packaging, tooling, CI definitions, documentation skeleton,
   release-check script.
 - Core domain model: elements, units table, permitted transforms, deterministic
