@@ -1,6 +1,6 @@
 # bridge-island
 
-[![CI](https://img.shields.io/badge/CI-placeholder-lightgrey)](#)
+[![CI](https://github.com/tkaiagent123/bridge-island/actions/workflows/ci.yml/badge.svg)](https://github.com/tkaiagent123/bridge-island/actions/workflows/ci.yml)
 [![DOI](https://img.shields.io/badge/DOI-placeholder-lightgrey)](#)
 [![PyPI](https://img.shields.io/badge/PyPI-placeholder-lightgrey)](#)
 
@@ -34,7 +34,7 @@ You need Python 3.10 or later and [uv](https://docs.astral.sh/uv/). The examples
 repository, so work from a clone:
 
 ```powershell
-git clone <repository-url>
+git clone https://github.com/tkaiagent123/bridge-island.git
 cd bridge-island
 uv sync --all-groups
 uv run bridge-island --version

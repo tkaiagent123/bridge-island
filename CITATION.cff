@@ -9,4 +9,5 @@ authors:
     given-names: Tzvi
     affiliation: "Independent Researcher, Connecticut, USA"
     orcid: "https://orcid.org/0009-0004-7401-0137"
-# TODO(author): add `repository-code`, `doi` and `date-released` after public release.
+repository-code: "https://github.com/tkaiagent123/bridge-island"
+# TODO(author): add `doi` and `date-released` after the release is published.

@@ -1,6 +1,6 @@
 site_name: bridge-island
 site_description: Reference implementation of the bridge/island integration architecture (invented platforms).
-# repo_url: set after public release
+repo_url: https://github.com/tkaiagent123/bridge-island
 theme:
   name: material
   features: [navigation.sections, content.code.copy]
