@@ -9,7 +9,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
-      - run: uv sync --all-groups
+      - run: uv sync --all-groups --all-extras
       - run: uv run python scripts/mutation_check.py --sample 300 --jobs 2
       - uses: actions/upload-artifact@v4
         with:
