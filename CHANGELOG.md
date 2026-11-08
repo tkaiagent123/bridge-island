@@ -46,6 +46,7 @@ and the project follows [Semantic Versioning](https://semver.org/).
   invariants over random scenarios.
 - Related work: anti-corruption layer, age of information, temporal-database vocabulary, design
   structure matrices, medical-device and open-avionics integration (verified citations).
+
 ### Fixed
 - The local app allowed inline scripts; each page now carries a one-time nonce, and pages without a script allow none.
 - The `mmHg` constant used the torr value; it now uses conventional mercury (regenerated mappings).
@@ -54,7 +55,8 @@ and the project follows [Semantic Versioning](https://semver.org/).
   instead of source time.
 - `extrapolate` produced no estimates for sources slower than about 5 Hz; the default limit is now
   1.5 source periods.
-- Two copies of the app could bind the same port on Windows; the port is now exclusive and the next free one is used.- `duration_s: .inf` (or NaN, or a huge value) hung or exhausted the simulator; scenarios are now
+- Two copies of the app could bind the same port on Windows; the port is now exclusive and the next free one is used.
+- `duration_s: .inf` (or NaN, or a huge value) hung or exhausted the simulator; scenarios are now
   validated as finite and at most one hour of simulated time.
 - Non-text values in scenario fields (for example a list as the example name) crashed with a raw
   `TypeError`; they now produce a message that says what to fix.
