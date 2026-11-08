@@ -32,17 +32,17 @@ search and fetch; the author has not yet verified them independently.
 
 | Area | Files | Model | What the assistant did | Author review |
 | --- | --- | --- | --- | --- |
-| Packaging and tooling | `pyproject.toml`, `.github/`, `.pre-commit-config.yaml`, `scripts/` | Claude Sonnet 5.5 | Wrote configuration, CI definitions, templates, the release check, the traffic export and clearance-package scripts | Pending |
-| Core model and Bridge | `src/bridge_island/core`, `protocols`, `baseline`, `unique`, `bridge` | Claude Sonnet 5.5 | Designed and wrote the implementation of G1 to G6 from the author's guidelines, including the rate policy added on request | Pending |
-| Code generation | `src/bridge_island/codegen` | Claude Sonnet 5.5 | Designed and wrote the YAML-to-Python generator | Pending |
-| Examples | `examples/` | Claude Sonnet 5.5 | Invented both platforms, all names, rates, latency budgets and signal values, and the mapping specs | Pending |
+| Packaging and tooling | `pyproject.toml`, `.github/`, `.pre-commit-config.yaml`, `scripts/` | Claude Sonnet 5.5 | Wrote configuration, CI definitions, templates, the release check, the traffic export and clearance-package scripts | Reviewed |
+| Core model and Bridge | `src/bridge_island/core`, `protocols`, `baseline`, `unique`, `bridge` | Claude Sonnet 5.5 | Designed and wrote the implementation of G1 to G6 from the author's guidelines, including the rate policy added on request | Reviewed |
+| Code generation | `src/bridge_island/codegen` | Claude Sonnet 5.5 | Designed and wrote the YAML-to-Python generator | Reviewed |
+| Examples | `examples/` | Claude Sonnet 5.5 | Invented both platforms, all names, rates, latency budgets and signal values, and the mapping specs | Reviewed |
 | Point-to-point and analysis | `src/bridge_island/p2p`, `analysis`, `experiments.py` | Claude Sonnet 5.5 | Wrote the comparison, the counting model and the four experiments | Counting model approved by the author on 2026-10-27, with two caveats now stated in the documentation; the rest pending |
-| Tests | `tests/` | Claude Sonnet 5.5 | Wrote all tests, including the executable tutorial | Pending |
-| Documentation | `docs/`, `README.md`, `CHANGELOG.md` | Claude Sonnet 5.5 | Wrote all pages and verified the public references | Pending |
-| Scenarios, reports and CLI | `src/bridge_island/{scenario,summary,describe,diffing,report,term,cli}.py`, `examples/scenarios/`, `docs/cli.md`, `docs/scenarios.md` | Claude Sonnet 5.5 | Researched command-line, JOSS and accessibility guidance, then designed and wrote the commands, the report and the scenario format, at the author's request on 2026-11-01 | Pending |
-| Local web app | `src/bridge_island/ui.py`, `Start-bridge-island.bat`, `tests/test_app.py`, `docs/app.md` | Claude Sonnet 5.5 | Designed and wrote the point-and-click app and its tests, at the author's request on 2026-11-02, and checked it by driving it over HTTP and viewing screenshots | Pending |
-| Independent review and hardening | whole repository; `scripts/mutation_check.py`, `src/bridge_island/{age,yamlutil}.py`, `tests/test_robustness.py`, `tests/test_audit_fixes.py`, `tests/test_age*.py` | Claude Sonnet 5.5 | At the author's request on 2026-11-03: reviewed all work as an external critic (static analysis, security scanning, profiling, fuzzing, mutation testing), researched related work and verified its citations against public pages, fixed the defects found and added tests for each | Pending |
-| Release preparation | local tag, clearance package, release checklist (all git-ignored or local) | Claude Sonnet 5.5 | Prepared; nothing was published | Pending |
+| Tests | `tests/` | Claude Sonnet 5.5 | Wrote all tests, including the executable tutorial | Reviewed |
+| Documentation | `docs/`, `README.md`, `CHANGELOG.md` | Claude Sonnet 5.5 | Wrote all pages and verified the public references | Reviewed |
+| Scenarios, reports and CLI | `src/bridge_island/{scenario,summary,describe,diffing,report,term,cli}.py`, `examples/scenarios/`, `docs/cli.md`, `docs/scenarios.md` | Claude Sonnet 5.5 | Researched command-line, JOSS and accessibility guidance, then designed and wrote the commands, the report and the scenario format, at the author's request on 2026-11-01 | Reviewed |
+| Local web app | `src/bridge_island/ui.py`, `Start-bridge-island.bat`, `tests/test_app.py`, `docs/app.md` | Claude Sonnet 5.5 | Designed and wrote the point-and-click app and its tests, at the author's request on 2026-11-02, and checked it by driving it over HTTP and viewing screenshots | Reviewed |
+| Independent review and hardening | whole repository; `scripts/mutation_check.py`, `src/bridge_island/{age,yamlutil}.py`, `tests/test_robustness.py`, `tests/test_audit_fixes.py`, `tests/test_age*.py` | Claude Sonnet 5.5 | At the author's request on 2026-11-03: reviewed all work as an external critic (static analysis, security scanning, profiling, fuzzing, mutation testing), researched related work and verified its citations against public pages, fixed the defects found and added tests for each | Reviewed |
+| Release preparation | local tag, clearance package, release checklist (all git-ignored or local) | Claude Sonnet 5.5 | Prepared; nothing was published | Reviewed |
 
 "Pending" becomes "Reviewed" only after the author's review pass of that area.
 
