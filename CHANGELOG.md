@@ -6,6 +6,12 @@ and the project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- The app has a new look: a colour system with light and dark themes, an app bar and tabs, a home page in three numbered steps (choose a platform, decide what happens, run it), and restyled result dashboards.
+
+### Fixed
+- `--no-color` is accepted after the command as well as before it (`bridge-island demo aviation --no-color`).
+
 ## [0.1.0] - 2026-11-08
 
 ### Added

@@ -70,39 +70,61 @@ NAV = [
 ]
 
 EXTRA_CSS = """
-:root{--btn:#0969da;--btn-fg:#fff}
-@media (prefers-color-scheme:dark){:root{--btn:#1f6feb}}
-header.top{display:flex;flex-wrap:wrap;align-items:baseline;gap:.5rem 1rem}
-nav{display:flex;flex-wrap:wrap;gap:.35rem;margin:.5rem 0 1rem}
-nav a{padding:.45rem .8rem;border:1px solid var(--line);border-radius:6px;text-decoration:none;color:var(--fg)}
-nav a[aria-current=page]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
-nav a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,
-summary:focus-visible,a:focus-visible{outline:3px solid var(--s0);outline-offset:2px}
-.card{border:1px solid var(--line);border-radius:8px;padding:1rem 1.25rem;background:var(--card);margin:1rem 0}
+:root{--brand:#4338ca;--brand-soft:#eef2ff;--btn:#4338ca;--btn-fg:#fff;--accent:#0f766e;--field:#6b7280;
+--bg:#f5f7fb;--card:#fff;--line:#dfe3ec;--muted:#4b5563;--shadow:0 1px 2px rgba(15,23,42,.07),0 4px 14px rgba(15,23,42,.05)}
+@media (prefers-color-scheme:dark){:root{--brand:#a5b4fc;--brand-soft:#1e2247;--btn:#818cf8;--btn-fg:#0b1020;
+--accent:#5eead4;--field:#8b93a7;--bg:#0b1020;--card:#141a2e;--line:#27304a;--muted:#a3acc2;--shadow:none}}
+.appbar{background:linear-gradient(135deg,#1e1b4b,#4338ca 62%,#0f766e);color:#fff;padding:1.1rem 1.25rem}
+.appbar>div{max-width:1100px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:baseline;gap:.25rem 1rem}
+.appbar strong{font-size:1.25rem;letter-spacing:.01em}.appbar .ver{opacity:.85;font-size:.9rem}
+.appbar .note{margin-left:auto;font-size:.85rem;opacity:.9}
+nav.tabs{background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+nav.tabs>div{max-width:1100px;margin:0 auto;display:flex;flex-wrap:wrap;padding:0 .75rem}
+nav.tabs a{padding:.8rem .95rem;text-decoration:none;color:var(--muted);font-weight:600;border-bottom:3px solid transparent}
+nav.tabs a:hover{color:var(--fg);background:var(--brand-soft)}
+nav.tabs a[aria-current=page]{color:var(--brand);border-bottom-color:var(--brand)}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,
+summary:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+main h1{font-size:1.9rem;letter-spacing:-.01em;margin:1.2rem 0 .3rem}
+.lede{font-size:1.1rem;color:var(--muted);max-width:60ch;margin:0 0 1.2rem}
+.card,.step{border:1px solid var(--line);border-radius:12px;padding:1.1rem 1.4rem;background:var(--card);margin:1rem 0;box-shadow:var(--shadow)}
 .card h2,.card h3{margin-top:0;border:0}
+.steps{display:grid;gap:0}
+.step h2{display:flex;align-items:center;gap:.7rem;margin:0 0 .6rem;border:0;font-size:1.2rem}
+.step .num{flex:none;display:inline-grid;place-items:center;width:2rem;height:2rem;border-radius:50%;
+background:var(--brand);color:var(--btn-fg);font-size:1rem;font-weight:700}
 label{display:block;font-weight:600;margin:.7rem 0 .15rem}
 .hint{color:var(--muted);font-size:.88rem;margin:.1rem 0 .3rem}
-input,select,textarea{font:inherit;padding:.45rem .55rem;border:1px solid var(--muted);border-radius:6px;
+input,select,textarea{font:inherit;padding:.5rem .6rem;border:1px solid var(--field);border-radius:8px;
 background:var(--bg);color:var(--fg);max-width:100%}
 input[type=number]{width:7.5rem}textarea{width:100%;min-height:15rem;font-family:ui-monospace,Consolas,monospace;font-size:.88rem}
 .row{display:flex;flex-wrap:wrap;gap:0 1.5rem}.row>div{flex:1 1 13rem}
-fieldset{border:1px solid var(--line);border-radius:6px;margin:.9rem 0;padding:.4rem 1rem .8rem}
-legend{font-weight:600;padding:0 .4rem}
+fieldset{border:1px solid var(--line);background:var(--bg);border-radius:10px;margin:.9rem 0;padding:.4rem 1rem .8rem}
+legend{font-weight:700;padding:0 .4rem;color:var(--accent)}
 .check{display:flex;gap:.5rem;align-items:center;font-weight:600;margin:.4rem 0}
-.check input{width:1.2rem;height:1.2rem}
-button,a.button{display:inline-block;font:inherit;font-weight:600;padding:.65rem 1.3rem;border:0;border-radius:6px;
+.check input{width:1.2rem;height:1.2rem;accent-color:var(--brand)}
+button,a.button{display:inline-block;font:inherit;font-weight:700;padding:.7rem 1.5rem;border:2px solid var(--btn);border-radius:10px;
 background:var(--btn);color:var(--btn-fg);cursor:pointer;text-decoration:none;margin:.5rem .5rem 0 0}
-button.secondary,a.button.secondary{background:transparent;color:var(--fg);border:1px solid var(--muted)}
-.presets a{display:inline-block;margin:.2rem .4rem .2rem 0;padding:.35rem .7rem;border:1px solid var(--line);
-border-radius:999px;text-decoration:none;color:var(--fg);background:var(--bg)}
-.error{border:2px solid var(--bad);border-radius:8px;padding:.75rem 1rem;margin:1rem 0}
+button:hover,a.button:hover{filter:brightness(1.08)}
+button.secondary,a.button.secondary{background:transparent;color:var(--brand);border:2px solid var(--brand)}
+.step button[type=submit]{font-size:1.1rem;padding:.8rem 2rem}
+.presets{margin:.4rem 0 .6rem}
+.presets a{display:inline-block;margin:.25rem .4rem .25rem 0;padding:.4rem .85rem;border:1px solid var(--brand);
+border-radius:999px;text-decoration:none;color:var(--brand);background:var(--brand-soft);font-weight:600;font-size:.92rem}
+.presets a:hover{background:var(--brand);color:var(--btn-fg)}
+.error{border:2px solid var(--bad);border-radius:10px;padding:.75rem 1rem;margin:1rem 0;background:var(--card)}
 .error strong{color:var(--bad)}
 ul.found li{margin:.35rem 0}
 .pass{color:var(--ok);font-weight:700}.fail{color:var(--bad);font-weight:700}
 details{margin:.5rem 0}summary{cursor:pointer;font-weight:600}
 dt{font-weight:600;margin-top:.7rem}dd{margin:0 0 .3rem 1.2rem;max-width:70ch}
-img.plot{max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;background:#fff}
-a{color:var(--btn)}
+img.plot{max-width:100%;height:auto;border:1px solid var(--line);border-radius:8px;background:#fff}
+a{color:var(--brand)}
+.banner{border-left:4px solid var(--accent);border-radius:8px;background:var(--card)}
+.tiles .tile{border-radius:12px;box-shadow:var(--shadow);padding:.9rem 1.1rem}.tiles .tile .v{font-size:1.55rem}
+.board{border-radius:12px;box-shadow:var(--shadow)}
+main h2{border-bottom:2px solid var(--brand-soft);padding-bottom:.2rem}
+@media (prefers-reduced-motion:no-preference){button,a.button,nav.tabs a,.presets a{transition:background .15s,color .15s}}
 """
 
 PRESETS = [
@@ -295,10 +317,11 @@ class App:
         doc = (
             '<!doctype html><html lang="en"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width,initial-scale=1">'
-            f"<title>{E(title)} - bridge-island</title><style>{REPORT_CSS}{EXTRA_CSS}{DASHBOARD_CSS}</style></head><body>"
-            '<a class="skip" href="#main">Skip to content</a><main id="main">'
-            f'<header class="top"><strong>bridge-island {bridge_island.__version__}</strong>'
-            f'<span class="muted">{E(NOTE)}</span></header><nav aria-label="Main">{nav}</nav>{body}'
+            f"<title>{E(title)} - bridge-island</title><style>{REPORT_CSS}{DASHBOARD_CSS}{EXTRA_CSS}</style></head><body>"
+            '<a class="skip" href="#main">Skip to content</a>'
+            f'<header class="appbar"><div><strong>bridge-island</strong><span class="ver">{bridge_island.__version__}</span>'
+            f'<span class="note">{E(NOTE)}</span></div></header>'
+            f'<nav class="tabs" aria-label="Main"><div>{nav}</div></nav><main id="main">{body}'
             "</main></body></html>"
         )
         return Response(status, doc.encode("utf-8"), headers={})
@@ -383,22 +406,18 @@ class App:
             for name, p in PRESETS
         )
         form = f"""
-<form class="card" method="post" action="/run">{self._hidden()}
-<h2>Run a simulation</h2>
-<p>Pick an example, choose what should happen during the run, and press Run. The result explains in plain
-sentences what happened. Nothing is saved on your computer unless you download it.</p>
-<div class="presets" role="group" aria-label="Quick starts"><strong>Quick starts:</strong> {presets}</div>
+<form class="steps" method="post" action="/run">{self._hidden()}
+<section class="step" aria-labelledby="s1"><h2 id="s1"><span class="num" aria-hidden="true">1</span>Choose a platform</h2>
 <div class="row">
  <div><label for="example">Example</label>{self._example_select(v("example", "aviation"))}
   <p class="hint">Two invented platforms: an air vehicle and an infusion device.</p></div>
  <div><label for="version">Baseline version</label>{self._select("version", [("1", "Version 1"), ("2", "Version 2 (a change from version 1)")], v("version", "1"))}
   <p class="hint">Version 2 renames, converts and removes some elements.</p></div>
 </div>
-<div class="row">
- <div><label for="duration">How long (seconds of simulated time)</label><input id="duration" name="duration" type="number" min="1" max="{MAX_DURATION_S:g}" step="any" value="{E(v("duration", "8"))}"></div>
- <div><label for="seed">Random seed</label><input id="seed" name="seed" type="number" step="1" value="{E(v("seed", "1"))}">
-  <p class="hint">The same seed always gives the same result.</p></div>
-</div>
+</section>
+<section class="step" aria-labelledby="s2"><h2 id="s2"><span class="num" aria-hidden="true">2</span>Decide what happens</h2>
+<p class="hint">Start from a ready-made case, or set the details yourself. Leave everything as it is for a normal run.</p>
+<div class="presets" role="group" aria-label="Quick starts"><strong>Quick starts:</strong> {presets}</div>
 <fieldset><legend>How the Bridge behaves</legend>
 <div class="row">
  <div><label for="time_tag">Time stamping</label>{self._select("time_tag", [("source", "Source time (correct)"), ("delivery", "Delivery time (the error the design forbids)")], v("time_tag", "source"))}
@@ -414,9 +433,22 @@ sentences what happened. Nothing is saved on your computer unless you download i
 <p class="hint">The faulty system is the one that can send requests to the baseline.</p></div>
 <div><label for="fault_at">at (s)</label><input id="fault_at" name="fault_at" type="number" min="0" step="any" value="{E(v("fault_at", "2"))}"></div></div>
 </fieldset>
-<button type="submit">Run</button>
+</section>
+<section class="step" aria-labelledby="s3"><h2 id="s3"><span class="num" aria-hidden="true">3</span>Run it</h2>
+<div class="row">
+ <div><label for="duration">How long (seconds of simulated time)</label><input id="duration" name="duration" type="number" min="1" max="{MAX_DURATION_S:g}" step="any" value="{E(v("duration", "8"))}"></div>
+ <div><label for="seed">Random seed</label><input id="seed" name="seed" type="number" step="1" value="{E(v("seed", "1"))}">
+  <p class="hint">The same seed always gives the same result.</p></div>
+</div>
+<button type="submit">Run the simulation</button>
+<p class="hint">The result explains what happened in plain sentences. Nothing is saved unless you download it.</p></section>
 </form>"""
-        return f"<h1>bridge-island</h1>{error}{form}"
+        lede = (
+            '<p class="lede">See what happens when a platform you cannot change is updated, stalls or '
+            "misbehaves, and how a single mediation layer, the Bridge, keeps independent systems "
+            "informed. Three steps, then a plain-English result.</p><!--form-->"
+        )
+        return f"<h1>bridge-island</h1>{lede}{error}{form}"
 
     def _scenario_dict(self, form: Mapping[str, list[str]]) -> dict[str, Any]:
         example = _first(form, "example", "aviation")
@@ -536,7 +568,9 @@ sentences what happened. Nothing is saved on your computer unless you download i
         data = self._scenario_dict(form)
         scenario, system, world, version = self._simulate(data, "the form")
         yaml_text = yaml.safe_dump(data, sort_keys=False)
-        again = "<h2>Change something and run again</h2>" + self._home(form).split("</h1>", 1)[1]
+        again = (
+            "<h2>Change something and run again</h2>" + self._home(form).split("<!--form-->", 1)[1]
+        )
         body = self._results_html(scenario, system, world, version, yaml_text, again)
         return self._page("Result", body, "/")
 
