@@ -1,12 +1,11 @@
-# Prepared, not activated. Deploy steps are commented out until release clearance is done.
 name: Docs
 on:
   push:
     branches: [main]
   pull_request:
 
-# permissions:
-#   contents: write   # needed only for gh-pages deploy
+permissions:
+  contents: write   # gh-pages deploy
 
 jobs:
   docs:
@@ -16,4 +15,8 @@ jobs:
       - uses: astral-sh/setup-uv@v5
       - run: uv sync --all-groups
       - run: uv run mkdocs build --strict
-      # - run: uv run mkdocs gh-deploy --force
+      - if: github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          uv run mkdocs gh-deploy --force
