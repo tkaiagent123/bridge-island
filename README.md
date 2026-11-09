@@ -1,7 +1,7 @@
 # bridge-island
 
 [![CI](https://github.com/tkaiagent123/bridge-island/actions/workflows/ci.yml/badge.svg)](https://github.com/tkaiagent123/bridge-island/actions/workflows/ci.yml)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24069114.svg)](https://doi.org/10.5281/zenodo.24069114)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24069113.svg)](https://doi.org/10.5281/zenodo.24069113)
 [![PyPI](https://img.shields.io/badge/PyPI-placeholder-lightgrey)](#)
 
 A small Python reference implementation of the **bridge/island integration architecture**.
