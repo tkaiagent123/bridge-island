@@ -10,4 +10,5 @@ authors:
     affiliation: "Independent Researcher, Connecticut, USA"
     orcid: "https://orcid.org/0009-0004-7401-0137"
 repository-code: "https://github.com/tkaiagent123/bridge-island"
-# TODO(author): add `doi` and `date-released` after the release is published.
+date-released: 2026-11-08
+# TODO(author): add `doi` after the release is published.

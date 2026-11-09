@@ -377,10 +377,15 @@ FIELDS = [
     st.dictionaries(st.sampled_from(FIELDS), JUNK, max_size=8),
 )
 def test_no_form_input_can_crash_the_app(path: str, fields: dict[str, str]) -> None:
-    if fields.get("trials", "10").isdigit() and int(fields.get("trials", "10")) > 60:
+    if (
+        fields.get("trials", "10").isascii()
+        and fields.get("trials", "10").isdigit()
+        and int(fields.get("trials", "10")) > 60
+    ):
         fields["trials"] = "20"  # keep the test fast; the bound itself is tested elsewhere
     if (
-        fields.get("duration", "5").replace(".", "", 1).isdigit()
+        fields.get("duration", "5").isascii()
+        and fields.get("duration", "5").replace(".", "", 1).isdigit()
         and float(fields.get("duration", "5")) > 8
     ):
         fields["duration"] = "8"
