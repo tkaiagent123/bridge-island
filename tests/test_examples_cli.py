@@ -160,3 +160,12 @@ def test_containment_experiment_keeps_the_baseline_clean_on_the_bridge(tmp_path:
     assert sum(int(r["baseline_rejected"]) for r in p2p) == 2  # faults only the baseline can catch
     assert sum(int(r["caught_by_subsystem_adapter"]) for r in p2p) == 3  # caught by subsystem code
     assert bridge[0]["baseline_accepted"] == "1"  # the valid message still gets through
+
+
+def test_no_color_is_accepted_before_or_after_the_command(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    assert main(["--no-color", "list"]) == 0
+    before = capsys.readouterr().out
+    assert main(["list", "--no-color"]) == 0
+    assert capsys.readouterr().out == before

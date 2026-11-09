@@ -352,7 +352,10 @@ _COMMANDS = {
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    args = _parser().parse_args(argv)
+    words = list(sys.argv[1:] if argv is None else argv)
+    if "--no-color" in words:  # accepted before or after the command
+        words = ["--no-color"] + [w for w in words if w != "--no-color"]
+    args = _parser().parse_args(words)
     try:
         return _COMMANDS[args.command](args)
     except (ScenarioError, FileNotFoundError, yaml.YAMLError) as exc:
