@@ -6,6 +6,12 @@ and the project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-09
+
+### Added
+- The documentation site is published at <https://tkaiagent123.github.io/bridge-island/> and rebuilt on every push to `main`.
+- The Zenodo concept DOI (`10.5281/zenodo.24069113`, all versions), the documentation URL and the release date are in `CITATION.cff` and the README.
+
 ### Changed
 - The app has a new look: a colour system with light and dark themes, an app bar and tabs, a home page in three numbered steps (choose a platform, decide what happens, run it), and restyled result dashboards.
 

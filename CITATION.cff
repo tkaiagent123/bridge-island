@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use this software, please cite it using these metadata."
 title: "bridge-island: a reference implementation of the bridge/island integration architecture"
 type: software
-version: 0.1.0
+version: 0.1.1
 license: Apache-2.0
 authors:
   - family-names: Kaminsky
@@ -11,5 +11,5 @@ authors:
     orcid: "https://orcid.org/0009-0004-7401-0137"
 url: "https://tkaiagent123.github.io/bridge-island/"
 repository-code: "https://github.com/tkaiagent123/bridge-island"
-date-released: 2026-11-08
+date-released: 2026-11-09
 doi: 10.5281/zenodo.24069113
