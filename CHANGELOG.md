@@ -6,6 +6,9 @@ and the project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- An in-browser version of the app (Python runs in your browser with Pyodide; nothing is uploaded) at <https://tkaiagent123.github.io/bridge-island/online/index.html>, built by `scripts/build_web.py` in the docs workflow.
+
 ## [0.1.1] - 2026-11-09
 
 ### Added

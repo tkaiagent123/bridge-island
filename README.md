@@ -45,6 +45,8 @@ extra adds matplotlib for the experiment plots). Run the tests with `uv run pyte
 
 ## Use it without a command line
 
+To try it with nothing installed, open the [in-browser app](https://tkaiagent123.github.io/bridge-island/online/index.html); it runs entirely in your browser.
+
 On Windows, double-click **`Start-bridge-island.bat`**. Your browser opens an app where you choose
 what should happen in a simulated run (a stall, a faulty system, a new baseline version), press a
 button, and get the result explained in plain sentences, with charts and downloads. The same thing

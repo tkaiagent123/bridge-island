@@ -23,6 +23,7 @@ plugins:
           paths: [src]
 nav:
   - Home: index.md
+  - Try it in your browser: try-online.md
   - Concepts: concepts.md
   - Using the app: app.md
   - Tutorial: tutorial.md
