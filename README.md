@@ -71,7 +71,7 @@ wiring breaks silently. Every command accepts `--help`; `list`, `demo`, `describ
 reference](docs/cli.md) has the details, and the 15-minute tutorial (`docs/tutorial.md`) adds a
 new subsystem to the example.
 
-Documentation: `uv run mkdocs serve` (concepts, tutorial, examples, command-line reference,
+Documentation: <https://tkaiagent123.github.io/bridge-island/>, or locally `uv run mkdocs serve` (concepts, tutorial, examples, command-line reference,
 scenarios, experiments, limitations, related work, API).
 
 ## Status
