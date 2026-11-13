@@ -33,7 +33,7 @@ The page across the top has six tabs.
 | **Scenario files** | Run one of the shipped scenarios, or paste your own. A scenario file describes one run completely, so it can be shared and repeated. |
 | **Full report** | One page with everything for an example. Open it here, or download it as a single file that works offline. |
 | **Check the guidelines** | Runs a test for each of the six design guidelines and says pass or fail, in words. |
-| **Experiments** | The four repeatable experiments, with tables, plots and downloadable files. |
+| **Experiments** | The first four repeatable experiments, with tables, plots and downloadable files. |
 | **Help** | Plain-English explanations of every term, how to read the charts, and the scenario file format. |
 
 ## Reading a result

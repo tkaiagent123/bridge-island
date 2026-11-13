@@ -13,7 +13,7 @@ content is invented and all numbers are synthetic, illustrative. Run `bridge-isl
 | `run SCENARIO.yaml` | Runs one reproducible scenario described in YAML. See [Scenarios](scenarios.md). |
 | `report EXAMPLE` | Writes one self-contained HTML report. |
 | `check-rules` | Runs the checks for guidelines G1 to G6 and prints pass or fail. |
-| `experiment NAME` | Runs one of the four [experiments](experiments.md), writing CSV and plots. |
+| `experiment NAME` | Runs one of the five [experiments](experiments.md), writing CSV and plots. `ai-mapping` also takes `--provider`, `--model`, `--trials`, `--repairs`, `--variant`, `--perturbed-n` and `--cassettes`. |
 | `codegen --spec FILE` | Compiles a YAML mapping spec to a Python module (G5). |
 
 ## A short tour

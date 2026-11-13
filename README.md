@@ -79,7 +79,7 @@ scenarios, experiments, limitations, related work, API).
 ## Status
 
 Alpha. Two invented examples (aviation, medical), each with a baseline interface v1 and v2;
-four reproducible experiments; scenario files; tests for the six design guidelines G1-G6. See the
+five reproducible experiments; scenario files; tests for the six design guidelines G1-G6. See the
 [CHANGELOG](CHANGELOG.md). Not flight or medical software; not certified.
 
 ## Community

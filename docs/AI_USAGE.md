@@ -43,8 +43,13 @@ search and fetch; the author has not yet verified them independently.
 | Local web app | `src/bridge_island/ui.py`, `Start-bridge-island.bat`, `tests/test_app.py`, `docs/app.md` | Claude Sonnet 5.5 | Designed and wrote the point-and-click app and its tests, at the author's request on 2026-11-02, and checked it by driving it over HTTP and viewing screenshots | Reviewed |
 | Independent review and hardening | whole repository; `scripts/mutation_check.py`, `src/bridge_island/{age,yamlutil}.py`, `tests/test_robustness.py`, `tests/test_audit_fixes.py`, `tests/test_age*.py` | Claude Sonnet 5.5 | At the author's request on 2026-11-03: reviewed all work as an external critic (static analysis, security scanning, profiling, fuzzing, mutation testing), researched related work and verified its citations against public pages, fixed the defects found and added tests for each | Reviewed |
 | Release preparation | local tag, clearance package, release checklist (all git-ignored or local) | Claude Sonnet 5.5 | Prepared; nothing was published | Reviewed |
+| AI-proposed mappings experiment | `src/bridge_island/aimap/`, `tests/test_aimap_*.py`, `experiments/ai_mapping.py`, `docs/experiments.md` section 5 | Claude Sonnet 5.5 | Designed and wrote the fifth experiment: prompt builder with a leak test, reply parser, behaviour scorer, three controls, two robustness variants, providers and cassettes, statistics, CLI and docs. The research question, the entry classes and the controls come from the author's brief | Pending |
 
 "Pending" becomes "Reviewed" only after the author's review pass of that area.
+
+### The experiment itself uses AI models
+
+The `ai-mapping` experiment asks a model to propose mappings; that is its subject, not part of how the code was written. In replay mode (the default, and the only mode in tests and CI) no model is called. In a live run the prompt, which contains only invented interface descriptions, is sent to the provider you choose (`anthropic` or `openai`), or to a model on your own machine (`ollama`). Every live response is stored in a cassette under `experiments/ai_mapping/cassettes/` with the model id and settings, and no key is ever written. Which models were run, and when, is recorded in the cassettes and in the experiment's output.
 
 ## Author decisions recorded so far
 
