@@ -104,11 +104,30 @@ def _parser() -> argparse.ArgumentParser:
     gen.add_argument("--out", type=Path, help="default: <spec dir>/generated/<spec name>.py")
 
     exp = add("experiment", "run a reproducible experiment, writing CSV (and plots)")
-    exp.add_argument("name", choices=["topology", "change-impact", "timing", "containment"])
+    exp.add_argument(
+        "name", choices=["topology", "change-impact", "timing", "containment", "ai-mapping"]
+    )
     exp.add_argument("--seed", type=int, default=1)
     exp.add_argument("--out", type=Path, default=Path("outputs"))
     exp.add_argument("--example", choices=EXAMPLES, default="aviation")
-    exp.add_argument("--trials", type=int, default=1000, help="change-impact Monte Carlo trials")
+    exp.add_argument(
+        "--trials",
+        type=int,
+        help="change-impact Monte Carlo trials (default 1000); ai-mapping model samples per case (default 1)",
+    )
+    ai = exp.add_argument_group("ai-mapping options")
+    ai.add_argument(
+        "--provider", choices=["replay", "anthropic", "openai", "ollama"], default="replay"
+    )
+    ai.add_argument("--model", help="model id (required for a live provider)")
+    ai.add_argument(
+        "--repairs", type=int, default=2, help="repair rounds after a rejected proposal"
+    )
+    ai.add_argument(
+        "--variant", default="plain", help="comma list of: plain, obfuscated, perturbed"
+    )
+    ai.add_argument("--perturbed-n", type=int, default=20, help="perturbed cases per example")
+    ai.add_argument("--cassettes", type=Path, help="cassette directory")
 
     rules = add("check-rules", "run the G1-G6 rule checks on an example")
     rules.add_argument("--example", choices=EXAMPLES, default="aviation")
@@ -304,7 +323,18 @@ def _cmd_codegen(args: argparse.Namespace) -> int:
 def _cmd_experiment(args: argparse.Namespace) -> int:
     from bridge_island import experiments
 
-    experiments.run(args.name, load_world(args.example), args.seed, args.out, args.trials)
+    options: dict[str, Any] = {}
+    if args.name == "ai-mapping":
+        options = {
+            "provider": args.provider,
+            "model": args.model,
+            "repairs": args.repairs,
+            "variants": [v.strip() for v in args.variant.split(",") if v.strip()],
+            "perturbed_n": args.perturbed_n,
+            "cassettes": args.cassettes,
+        }
+    trials = args.trials or (1 if args.name == "ai-mapping" else 1000)
+    experiments.run(args.name, load_world(args.example), args.seed, args.out, trials, **options)
     return 0
 
 
