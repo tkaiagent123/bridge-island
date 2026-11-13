@@ -26,6 +26,8 @@ dependencies = ["PyYAML>=6.0"]
 
 [project.optional-dependencies]
 plots = ["matplotlib>=3.7"]
+# Only for live runs of the ai-mapping experiment; replay (the default) needs none of them.
+ai = ["anthropic>=0.40", "openai>=1.50"]
 
 [project.urls]
 Repository = "https://github.com/tkaiagent123/bridge-island"
