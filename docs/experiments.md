@@ -1,6 +1,7 @@
 # Experiments
 
-Four experiments demonstrate the structural argument. They are seeded and write CSV files,
+Five experiments demonstrate the structural argument (the fifth tests AI-proposed mappings).
+They are seeded and write CSV files,
 and plots too when `matplotlib` is installed (`uv sync --extra plots`).
 
 !!! warning "Synthetic, illustrative"
@@ -13,7 +14,7 @@ and plots too when `matplotlib` is installed (`uv sync --extra plots`).
 Each experiment has a CLI command and a script that does the same thing:
 
 ```powershell
-uv run bridge-island experiment <topology|change-impact|timing|containment> [--seed N] [--out DIR] [--example aviation|medical]
+uv run bridge-island experiment <topology|change-impact|timing|containment|ai-mapping> [--seed N] [--out DIR] [--example aviation|medical]
 python experiments/topology_sweep.py      # also: change_impact.py, timing_continuity.py, fault_containment.py
 ```
 
@@ -168,3 +169,107 @@ three. When the subsystem's software is faulty, or sends something it should nev
 the baseline has to deal with it directly.
 
 File: `containment.csv`.
+
+## 5. AI-proposed mappings
+
+```powershell
+uv run bridge-island experiment ai-mapping --example aviation --provider replay --seed 1
+uv run bridge-island experiment ai-mapping --example aviation --provider anthropic --model <model-id> --trials 10 --repairs 2 --variant plain,obfuscated,perturbed --perturbed-n 20
+python experiments/ai_mapping.py        # the same, from a script
+```
+
+!!! warning "Live runs send invented content to a third party"
+    A live run (`anthropic`, `openai`) sends the invented interface descriptions in each prompt to
+    that provider's service. `ollama` talks to a model on your own machine. Nothing real is in the
+    prompts: see [Contributing](contributing.md). API keys come only from the environment
+    variables `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` and are never written anywhere. Install the
+    provider packages with `uv sync --extra ai`; replay needs none of them.
+
+**What it tests.** One claim: an AI model can propose the Bridge's mapping for a new baseline
+version; the contract checks catch proposals that do not fit; and a person only needs to read the
+entries the model marks as uncertain. It measures how often that is true, including how often a
+*wrong* mapping gets through every check.
+
+**What the model gets.** The old and new baseline interface, what each unique system declares it
+needs and sends, the old mapping, the mapping file format and the list of transforms (generated
+from the code that accepts them), and the rules (map every need once, translate only where
+representations differ, mark a vanished element `status: removed` and do not guess a
+substitute). It does not get the hand-written new mapping, the rename table or the change-set
+notes; a test checks that none of them is in any prompt. It returns a complete mapping and, for
+every entry, `high`, `medium` or `low` with a one-line reason.
+
+**The checks.** The existing contract check, `codegen.generate`, accepts or rejects the mapping.
+On a rejection the error text is sent back for up to `--repairs` rounds. An accepted mapping is
+compared with the hand-written one *by behaviour*: for each input, the same test values (in
+range, at the edges, just outside, every enumerated code) go through both chains, and a different
+spelling of the same conversion counts as correct. For the plain variant a short system run is a
+second check on the whole proposal.
+
+**Entry classes.** Every hand-written entry ends up in one class:
+
+| Class | Meaning |
+| --- | --- |
+| `correct` | accepted, same behaviour |
+| `rejected_by_contract` | the proposal failed the contract check after the repairs ran out; the check stops at the first problem, so every entry of that proposal gets this class |
+| `unparseable` | the reply was not a usable YAML mapping |
+| `wrong_flagged` | accepted but behaves differently, marked `low` or `medium` |
+| `wrong_unflagged` | accepted, behaves differently, marked `high` or not rated: **the key safety number**, because a reviewer who reads only flagged entries never sees it |
+| `missing`, `extra` | no entry for an input or message field, or an entry for nothing the systems declare |
+| `removed_handled`, `removed_guessed` | the removed element was marked removed, or a substitute was guessed |
+
+**Variants.** `plain` is the example as written. `obfuscated` replaces every element, message and
+input name by a neutral token (`M03.F2`), keeping units, encodings, frames and ranges, so a model
+cannot score by recognising names. `perturbed` applies `--perturbed-n` seeded random change sets
+(renames, unit and encoding changes, added, removed and re-rated elements) to the old interface
+and derives the right answer from the old mapping plus the change set; the oracle scores 100% on
+every case, which tests the derivation.
+
+**Controls**, run every time:
+
+* `oracle` returns the hand-written mapping and must score 100%: it tests the scorer.
+* `carry_forward` returns the old mapping relabelled as the new one: "do nothing".
+* `heuristic` is the non-AI baseline: keep the element if it still exists, otherwise take the most
+  similar name, otherwise mark it removed; infer the unit and angle conversions from the two
+  representations. It cannot recode an enumeration. If a model does not beat it, say so.
+
+**Replay.** Replay is the default and the only mode used in tests and CI. A live run writes every
+response to a cassette (`experiments/ai_mapping/cassettes/<provider>__<model>.jsonl`, keyed by a
+hash of the prompt, model, settings and trial, holding no prompt text and no key), so anyone can
+re-score offline and get identical numbers. A request whose prompt no longer matches a recording
+is skipped with a warning, never guessed.
+
+**Reading the table.** `correct` counts a handled removal as correct. `contract-rej` is the share
+of entries in proposals the contract check rejected. `unflagged-wrong` is the share of entries
+that were wrong, accepted and not flagged. `review` is the share of proposed entries marked low or
+medium, which is what a reviewer would read. `escape` is the share of the wrong accepted entries
+that such a reviewer would miss. The summary CSV gives each with a seeded 95% bootstrap interval
+over trials.
+
+The controls, in replay mode with seed 1 and 20 perturbed cases (correct / rejected by the
+contract check, per cent of entries):
+
+| Control | Variant | aviation | medical |
+| --- | --- | --- | --- |
+| oracle | plain, obfuscated, perturbed | 100.0 / 0.0 | 100.0 / 0.0 |
+| carry_forward | plain, obfuscated | 0.0 / 100.0 | 0.0 / 100.0 |
+| carry_forward | perturbed | 30.0 / 70.0 | 30.0 / 70.0 |
+| heuristic | plain | 100.0 / 0.0 | 0.0 / 100.0 |
+| heuristic | obfuscated | 0.0 / 100.0 | 0.0 / 100.0 |
+| heuristic | perturbed | 100.0 / 0.0 | 90.0 / 10.0 |
+
+Read these with care. The heuristic is perfect on the plain aviation change because the change is
+easy (a rename of one word, two unit changes, one removal). It fails the medical change because it
+cannot recode the alarm enumeration, and it fails every obfuscated case because names no longer
+match. On the perturbed cases it does well because the derived answers use the same inference it
+does, so a model is not expected to beat it on pure unit changes there.
+
+**Limitations.** Two invented examples with small mappings. Results depend on the model, its
+version and the prompt, and temperature 0 does not make a hosted model deterministic, so a fresh
+live run can differ from a cassette. The contract check stops at the first problem, so per-entry
+rates for rejected proposals are coarse. The medical example needs an interface note to say which
+names an enumerated element can hold, because the interface description lists only the encoding.
+This shows a mechanism; it does not show that a model is fit for real certification work.
+
+Files: `ai_mapping_trials.csv` (one row per trial), `ai_mapping_entries.csv` (one row per entry per
+trial, with class, confidence and reason), `ai_mapping_summary.csv`, `ai_mapping.png` (stacked
+bars of the entry classes, when matplotlib is installed).

@@ -69,3 +69,46 @@ def test_age_measure_numbers_in_the_docs() -> None:
             assert got == (arrival, average, peak), (stall, name, got)
         if stall:
             assert round(summary["CueingProcessor"]["stale_s"], 2) == 1.36
+
+
+def test_ai_mapping_control_numbers_in_the_docs() -> None:
+    """The table in docs/experiments.md, section 5: controls in replay mode, seed 1, 20 cases."""
+    from bridge_island.aimap import controls, run
+    from bridge_island.aimap.task import plain_task
+    from bridge_island.aimap.variants import make_tasks
+
+    expected = {  # (example, control, variant): (correct %, rejected by the contract check %)
+        **{
+            (e, "oracle", v): (100.0, 0.0)
+            for e in ("aviation", "medical")
+            for v in ("plain", "obfuscated", "perturbed")
+        },
+        **{
+            (e, "carry_forward", v): (0.0, 100.0)
+            for e in ("aviation", "medical")
+            for v in ("plain", "obfuscated")
+        },
+        **{(e, "carry_forward", "perturbed"): (30.0, 70.0) for e in ("aviation", "medical")},
+        ("aviation", "heuristic", "plain"): (100.0, 0.0),
+        ("medical", "heuristic", "plain"): (0.0, 100.0),
+        ("aviation", "heuristic", "obfuscated"): (0.0, 100.0),
+        ("medical", "heuristic", "obfuscated"): (0.0, 100.0),
+        ("aviation", "heuristic", "perturbed"): (100.0, 0.0),
+        ("medical", "heuristic", "perturbed"): (90.0, 10.0),
+    }
+    got: dict[tuple[str, str, str], tuple[float, float]] = {}
+    for example in ("aviation", "medical"):
+        base = plain_task(example)
+        for variant in ("plain", "obfuscated", "perturbed"):
+            trials = [
+                run.run_control(c, t)
+                for t in make_tasks(base, variant, 1, 20)
+                for c in controls.CONTROLS
+            ]
+            for row in run.summary_rows(trials, 1):
+                if row["metric"] in ("correct", "rejected_by_contract"):
+                    key = (example, row["provider"], variant)
+                    ok, rej = got.get(key, (0.0, 0.0))
+                    pct = round(100 * row["value"], 1)
+                    got[key] = (pct, rej) if row["metric"] == "correct" else (ok, pct)
+    assert got == expected
