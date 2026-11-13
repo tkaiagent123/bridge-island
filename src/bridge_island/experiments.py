@@ -338,7 +338,9 @@ def containment(out: Path, seed: int, world: ModuleType) -> dict[str, Path]:
     return files
 
 
-def run(name: str, world: ModuleType, seed: int, out: Path, trials: int = 1000) -> dict[str, Path]:
+def run(
+    name: str, world: ModuleType, seed: int, out: Path, trials: int = 1000, **options: Any
+) -> dict[str, Path]:
     out = out / name
     if name == "topology":
         files = topology_sweep(out, seed)
@@ -348,6 +350,10 @@ def run(name: str, world: ModuleType, seed: int, out: Path, trials: int = 1000) 
         files = timing(out, seed, world)
     elif name == "containment":
         files = containment(out, seed, world)
+    elif name == "ai-mapping":
+        from bridge_island.aimap.run import ai_mapping  # imports this module, so load it late
+
+        files = ai_mapping(out, seed, world.NAME, trials=trials, **options)
     else:
         raise KeyError(name)
     for path in files.values():
