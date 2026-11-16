@@ -113,6 +113,8 @@ max-complexity = 15
 "src/bridge_island/clinical/app.py" = ["E501"]
 "src/bridge_island/clinical/cli.py" = ["E501"]
 "src/bridge_island/clinical/experiment.py" = ["E501"]
+"src/bridge_island/clinical/docs_tables.py" = ["E501"]
+"src/bridge_island/clinical/traceability.py" = ["E501"]
 
 [tool.mypy]
 python_version = "3.10"

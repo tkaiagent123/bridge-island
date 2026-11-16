@@ -435,3 +435,41 @@ def ledger_figure(out: Path, rows: Sequence[dict[str, Any]]) -> dict[str, Path]:
         handles=handles, loc="upper center", bbox_to_anchor=(0.5, -0.16), ncol=1, frameon=False
     )
     return _save(fig, out, "fig5_change_ledger")
+
+
+# ---- Fig 7: the traceability matrix ----------------------------------------------------------------
+
+
+def traceability_figure(out: Path) -> dict[str, Path]:
+    from bridge_island.clinical import traceability as T
+
+    plt = _plt()
+    if plt is None:
+        return {}
+    rows = T.load()["rows"]
+    fill = {"demonstrated": "#CDEBDD", "partial": "#FCE8C8"}
+    cells = [
+        [
+            r["id"],
+            f"{r['source']} {r['section']}",
+            r["contract_field"],
+            str(len(r["tests"])),
+            r["status"],
+        ]
+        for r in rows
+    ]
+    fig, ax = plt.subplots(figsize=(3.6, 0.22 * len(rows) + 0.9))
+    ax.axis("off")
+    table = ax.table(
+        cellText=cells,
+        colLabels=["Id", "Source", "Contract field", "Tests", "Status"],
+        cellColours=[["white"] * 4 + [fill.get(r["status"], "#EEEEEE")] for r in rows],
+        loc="center",
+        cellLoc="left",
+    )
+    table.auto_set_font_size(False)
+    table.set_fontsize(5.5)
+    table.auto_set_column_width(list(range(5)))
+    table.scale(1, 1.15)
+    ax.set_title(f"Requirements traceability ({LABEL}; not a compliance claim)", fontsize=7)
+    return _save(fig, out, "fig7_traceability")

@@ -287,4 +287,5 @@ def change_ledger(out: Path, seed: int = 1, figures: bool = True) -> dict[str, P
         from bridge_island.clinical import figures as F
 
         files.update(F.ledger_figure(out, rows))
+        files.update(F.traceability_figure(out))
     return files
