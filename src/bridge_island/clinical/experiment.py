@@ -13,7 +13,6 @@ from __future__ import annotations
 import os
 import time
 from collections.abc import Sequence
-from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from typing import Any
 
@@ -76,6 +75,8 @@ def run_matrix(
     jobs = [(sc, a, p, seed) for sc in resolved for a in archs for p in patients]
     workers = workers if workers is not None else max(1, min(4, (os.cpu_count() or 1)))
     if workers > 1 and len(jobs) > 1:
+        from concurrent.futures import ProcessPoolExecutor  # not in the browser build (Pyodide)
+
         with ProcessPoolExecutor(workers) as pool:
             results = list(pool.map(run_one, jobs, chunksize=4))
     else:

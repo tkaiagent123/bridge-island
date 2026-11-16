@@ -48,6 +48,10 @@ EXPLAIN = {
 }
 
 
+def _num(x: float) -> str:
+    return f"{int(x):,}" if float(x).is_integer() and abs(x) >= 1e5 else f"{x:g}"
+
+
 def badge(passed: bool | None) -> str:
     if passed is None:
         return '<span class="muted">not run</span>'
@@ -76,7 +80,7 @@ def contract_card(spec: ContractSpec | None = None, results: dict[str, bool] | N
     parts.append(f"<h3>{SECTION_TITLES['owner']}</h3><p>{E(spec.owner)}</p>")
     parts.append(f"<h3>{SECTION_TITLES['regulatory_home']}</h3><p>{E(spec.regulatory_home)}</p>")
     rows = "".join(
-        f"<tr><td><code>{E(i.name)}</code></td><td>{E(i.units)}</td><td class='n'>{i.lo:g} to {i.hi:g}</td>"
+        f"<tr><td><code>{E(i.name)}</code></td><td>{E(i.units)}</td><td class='n'>{_num(i.lo)} to {_num(i.hi)}</td>"
         f"<td>{E(i.encoding)}</td><td>{E(i.role or '')}</td></tr>"
         for i in spec.items
     )
@@ -190,6 +194,7 @@ def run_view(scenario_name: str, patient: int, archs: Sequence[str], seed: int =
         f"<ul class='found'>{''.join(f'<li>{E(s)}</li>' for s in explain_rows(scenario.name, rows))}</ul>"
         f'<div class="tiles">{tiles}</div>'
         f"<h2>Glucose</h2><p>{svg.legend(list(loops))}</p>"
+        + '<p class="hint">Where two architectures give the same glucose, their lines lie on top of each other.</p>'
         + svg.glucose_chart(
             "g",
             {a: lp.patient.trace for a, lp in loops.items()},

@@ -26,4 +26,4 @@ jobs:
       - run: uv run pytest --cov --cov-report=term-missing
       - run: >-
           uv run coverage report --fail-under=90
-          --include="src/bridge_island/core/*,src/bridge_island/bridge/*,src/bridge_island/codegen/*"
+          --include="src/bridge_island/core/*,src/bridge_island/bridge/*,src/bridge_island/codegen/*,src/bridge_island/clinical/*"
