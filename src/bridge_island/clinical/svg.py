@@ -83,8 +83,9 @@ def glucose_chart(
     for g in range(0, int(ymax) + 1, 100):
         out.append(f'<text x="{left - 4}" y="{py(g) + 4:.1f}" text-anchor="end">{g}</text>')
     for hr in range(0, int(hours) + 1, 4):
+        anchor = "end" if hr >= hours - 0.5 else "middle"  # keep the last label inside the chart
         out.append(
-            f'<text x="{px(hr * 60):.1f}" y="{h - bottom + 14}" text-anchor="middle">{hr:02d}:00</text>'
+            f'<text x="{px(hr * 60):.1f}" y="{h - bottom + 14}" text-anchor="{anchor}">{hr:02d}:00</text>'
         )
     out.append(
         f'<text x="{(w + left) / 2}" y="{h - 4}" text-anchor="middle">time of day (h)</text>'

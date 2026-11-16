@@ -71,7 +71,9 @@ source = ["bridge_island"]
 branch = true
 
 [tool.coverage.report]
-# The 90% target applies to core, bridge and codegen (checked in CI by scripts/check_coverage.py).
+# The 90% target applies to core, bridge (with the contract monitor), codegen and clinical (the
+# insulin loop, including the envelope module). CI checks it with `coverage report --fail-under=90
+# --include=...` in .github/workflows/ci.yml; there is no separate coverage script.
 show_missing = true
 
 [tool.ruff]
