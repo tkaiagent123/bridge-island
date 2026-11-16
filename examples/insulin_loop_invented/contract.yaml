@@ -27,6 +27,8 @@ timing:
   max_age_s: {GlucoseReading: 660}  # measured from the reading's source time (G3)
   latency_budget_s: 60  # end to end, sensor sample to controller, and controller to pump
   check_period_s: 60
+  flag_margin_s: 90  # flag readings this long before the maximum age: the controller may read
+                    # one up to a check period and a host frame later
 
 failure_behavior:
   # Stale, missing or out-of-range glucose: send the controller a reading flagged FAILSAFE (4),

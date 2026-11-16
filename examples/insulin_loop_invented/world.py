@@ -239,6 +239,15 @@ def build_p2p(version: int = 1, seed: int = 1, adapters_from: int | None = None)
     return loop.build_default_direct(version, seed, adapters_from)
 
 
+# Who owns what (all invented). The Bridge and its contract belong to "Integrator Org (invented)".
+OWNERS = {
+    "ControllerHost": "Host Maker Org (invented)",
+    "SensorA": "Sensor Maker A (invented)",
+    "SensorB": "Sensor Maker B (invented)",
+    "PumpA": "Pump Maker Org (invented)",
+    "PumpB": "Pump Maker Org (invented)",
+    "CompanionDisplay": "App Maker Org (invented)",
+}
 NAME = "insulin-loop"
 VERSIONS = (1, 2)
 RULE_TIME_SCALE = 600.0  # the rule checks run 600x longer here: data moves in minutes

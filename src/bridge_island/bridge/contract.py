@@ -109,6 +109,7 @@ class ContractSpec:
     max_age_s: Mapping[str, float]
     latency_budget_s: float
     check_period_s: float
+    flag_margin_s: float
     failsafe_basal_u_h: float | None  # None: "programmed", filled in when installed
     failsafe_status: int
     ok_statuses: frozenset[int]
@@ -275,6 +276,7 @@ def parse_contract(data: Any, source: str = "contract") -> ContractSpec:
         check_period_s=_num(
             _need(timing, "check_period_s", "timing"), "timing.check_period_s", 1e-6
         ),
+        flag_margin_s=_num(timing.get("flag_margin_s", 0.0), "timing.flag_margin_s"),
         failsafe_basal_u_h=_basal(_need(fb, "failsafe_basal_u_h", "failure_behavior")),
         failsafe_status=_int(_need(fb, "failsafe_status", "failure_behavior"), "failsafe_status"),
         ok_statuses=_statuses(_need(fb, "ok_statuses", "failure_behavior")),
@@ -362,7 +364,8 @@ class ContractMonitor:
         self.glucose_msg = g.message
         self.failsafe = False
         self.failsafe_since: float | None = None
-        self.last_glucose_time: float | None = None
+        self.last_glucose_time: float | None = None  # newest valid reading to cross the Bridge
+        self.held_time: float | None = None  # newest valid reading handed to the controller
         self.started_at = sched.now
         self.seen_ids: set[Any] = set()
         self.pending: dict[Any, _Pending] = {}
@@ -462,9 +465,31 @@ class ContractMonitor:
             return self._enter_failsafe("; ".join(reasons))
         assert isinstance(source_time, (int, float))
         self.last_glucose_time = max(self.last_glucose_time or source_time, source_time)
+        return msg
+
+    def _flag_age(self) -> float:
+        """Readings are flagged this old: the maximum age less the margin for the controller's
+        own delay (it may read a reading up to one check period and one host frame later)."""
+        return self.spec.max_age_s.get(self.glucose_msg, math.inf) - self.spec.flag_margin_s
+
+    def handover(self, msg: Message) -> Message:
+        """The last look as the controller takes a reading: it may have aged in the queue. A
+        fresh reading that reaches the controller ends the fail-safe."""
+        if msg.spec_name != self.glucose_msg:
+            return msg
+        status = msg.values.get(self._field("glucose_status"))
+        source_time = msg.values.get(self._field("glucose_time"))
+        if status == self.spec.failsafe_status or not isinstance(source_time, (int, float)):
+            return msg
+        age = self.sched.now - source_time
+        if age > self._flag_age():
+            return self._enter_failsafe(
+                f"reading {age:.0f} s old at handover, flagged at {self._flag_age():g} s"
+            )
+        self.held_time = max(self.held_time or source_time, source_time)
         if self.failsafe:
             self.failsafe, self.failsafe_since = False, None
-            self._log("recovered", "valid glucose again")
+            self._log("recovered", "valid glucose reached the controller again")
         return msg
 
     def rejected_up(self, sender: str, message: str, reason: str) -> None:
@@ -526,11 +551,16 @@ class ContractMonitor:
     def scan(self) -> None:
         now = self.sched.now
         max_age = self.spec.max_age_s.get(self.glucose_msg)
-        basis = self.last_glucose_time if self.last_glucose_time is not None else self.started_at
-        if max_age is not None and not self.failsafe and now - basis > max_age:
-            what = "no glucose" if self.last_glucose_time is None else "glucose stale"
+        basis = self.held_time if self.held_time is not None else self.started_at
+        if max_age is not None and not self.failsafe and now - basis > self._flag_age():
+            what = (
+                "no glucose" if self.held_time is None else "glucose the controller holds is stale"
+            )
             self._submit_up(
-                self._enter_failsafe(f"{what}: {now - basis:.0f} s, limit {max_age:g} s")
+                self._enter_failsafe(
+                    f"{what}: {now - basis:.0f} s, flagged at {self._flag_age():g} s "
+                    f"(limit {max_age:g} s)"
+                )
             )
         for command_id, p in list(self.pending.items()):
             if now - p.sent_at < self.spec.confirm_timeout_s * (p.resends + 1):

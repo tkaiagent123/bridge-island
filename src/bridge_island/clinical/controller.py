@@ -157,6 +157,10 @@ class Controller:
             self._memo[key] = make(now)
         return self._memo[key]
 
+    def outputs(self, kind: str) -> list[tuple[float, dict[str, Any]]]:
+        """Every ``"command"`` or ``"status"`` the host published, in time order."""
+        return sorted((t, v) for (k, t), v in self._memo.items() if k == kind)
+
     def command(self, now: float) -> dict[str, Any]:
         return self._memoized("command", now, self._command)
 

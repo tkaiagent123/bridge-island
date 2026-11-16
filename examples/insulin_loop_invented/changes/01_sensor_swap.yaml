@@ -1,0 +1,11 @@
+# A declared change (invented). Synthetic, illustrative.
+name: sensor swap
+description: SensorA is replaced by SensorB from another maker.
+side: unique
+device: SensorB
+simulate: sensor_swap
+declares:
+  glucose_units: mmol/L
+  sample_period_s: 60
+  sensor_lag_s: 300
+  protocol: pubsub

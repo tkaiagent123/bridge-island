@@ -1,0 +1,9 @@
+# A declared change (invented). Synthetic, illustrative.
+name: new alarm field
+description: The display app wants a new alarm priority field that the controller host does not publish.
+side: unique
+device: CompanionDisplay
+simulate: default
+declares:
+  new_crossing_fields:
+  - ControllerStatus.alarm_priority

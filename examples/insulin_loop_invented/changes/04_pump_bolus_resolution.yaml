@@ -1,0 +1,8 @@
+# A declared change (invented). Synthetic, illustrative.
+name: pump bolus resolution
+description: A pump firmware update changes the bolus step to 0.1 U.
+side: unique
+device: PumpA
+simulate: default
+declares:
+  bolus_resolution_u: 0.1
