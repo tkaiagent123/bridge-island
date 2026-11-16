@@ -34,6 +34,7 @@ import yaml
 
 import bridge_island
 from bridge_island import experiments
+from bridge_island.clinical.svg import CSS as SVG_CSS
 from bridge_island.dashboard import CSS as DASHBOARD_CSS
 from bridge_island.dashboard import dashboard
 from bridge_island.examples import EXAMPLES, examples_dir, load_world
@@ -66,8 +67,11 @@ NAV = [
     ("/report", "Full report"),
     ("/rules", "Check the guidelines"),
     ("/experiments", "Experiments"),
+    ("/insulin", "Insulin loop"),
     ("/help", "Help"),
 ]
+
+CLINICAL_CSS = SVG_CSS + ".muted{color:var(--muted)}"
 
 EXTRA_CSS = """
 :root{--brand:#4338ca;--brand-soft:#eef2ff;--btn:#4338ca;--btn-fg:#fff;--accent:#0f766e;--field:#6b7280;
@@ -247,6 +251,8 @@ def _num(
 class App:
     """The whole app, with no sockets: ``handle`` takes a request and returns a response."""
 
+    browser = False  # True in the in-browser build: no worker processes, so no cohort runs
+
     def __init__(self, port: int = 0) -> None:
         self.token = secrets.token_urlsafe(16)
         self.port = port
@@ -317,7 +323,7 @@ class App:
         doc = (
             '<!doctype html><html lang="en"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width,initial-scale=1">'
-            f"<title>{E(title)} - bridge-island</title><style>{REPORT_CSS}{DASHBOARD_CSS}{EXTRA_CSS}</style></head><body>"
+            f"<title>{E(title)} - bridge-island</title><style>{REPORT_CSS}{DASHBOARD_CSS}{EXTRA_CSS}{CLINICAL_CSS}</style></head><body>"
             '<a class="skip" href="#main">Skip to content</a>'
             f'<header class="appbar"><div><strong>bridge-island</strong><span class="ver">{bridge_island.__version__}</span>'
             f'<span class="note">{E(NOTE)}</span></div></header>'
@@ -344,6 +350,11 @@ class App:
             return self._page("Experiments", self._experiments_form(), "/experiments")
         if path == "/help":
             return self._page("Help", self._help(), "/help")
+        if path.startswith("/insulin"):
+            from bridge_island.clinical import app as clinical_app
+
+            title, body = clinical_app.get(self, path, query)
+            return self._page(title, body, "/insulin")
         if path.startswith("/download/"):
             return self._download(path)
         return self._page(
@@ -361,6 +372,12 @@ class App:
             return self._rules(form)
         if path == "/experiments":
             return self._experiment(form)
+        if path.startswith("/insulin"):
+            from bridge_island.clinical import app as clinical_app
+
+            with self._lock:
+                title, body = clinical_app.post(self, path, form)
+            return self._page(title, body, "/insulin")
         return self._plain(404, "Not found.")
 
     def _download(self, path: str) -> Response:

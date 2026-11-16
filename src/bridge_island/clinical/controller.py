@@ -8,15 +8,17 @@ software, not a dosing algorithm, not for clinical use. Every 5 minutes it:
   reading otherwise: checking freshness more finely is the interface's job, under the host's
   published interface;
 * below ``suspend_below`` (80 mg/dL) it suspends basal; up to ``target`` it gives the programmed
-  basal; above ``target`` it adds a proportional correction, ``(G - target) / ISF - IOB`` units
+  basal; above ``target`` it adds a proportional correction, ``0.5 (G - target) / ISF - IOB`` units
   spread over an hour, never more than ``max_basal_factor`` times the programmed basal, and none
   at all while insulin on board (IOB) is at or above ``iob_limit_u``;
 * without a reading that counts, it gives the programmed basal (open-loop fallback);
-* adds a meal bolus, ``carbs / carb ratio``, for every meal announced since the last cycle;
+* adds a meal bolus, ``0.87 carbs / carb ratio``, for every meal announced since the last cycle;
 * raises its own alarms: urgent low, low, no glucose (watchdog), pump communication (no
   confirmation for 30 min, or a confirmation saying the command was not confirmed).
 
-Insulin on board is counted from the pump's confirmations, decaying with a 60-minute time constant.
+Insulin on board is counted from the pump's confirmations, decaying with a 120-minute time constant.
+The settings were tuned once, on the healthy-data day, so that no virtual patient goes below
+54 mg/dL; the comparisons then isolate interface effects (a threat to validity, stated in the docs).
 """
 
 from __future__ import annotations
@@ -48,7 +50,9 @@ class Settings:
     cycle_s: float = 300.0
     valid_for_s: float = 720.0
     max_basal_factor: float = 3.0
-    iob_tau_min: float = 60.0
+    iob_tau_min: float = 120.0
+    correction_gain: float = 0.5  # half the estimated deficit per hour
+    meal_bolus_fraction: float = 0.87  # a slightly cautious meal bolus
     iob_limit_factor: float = 2.5  # IOB limit = this many hours of programmed basal
 
 
@@ -179,13 +183,13 @@ class Controller:
         elif glucose <= s.target:
             basal, mode = th.basal_u_h, "CLOSED_LOOP"
         else:
-            wanted = (glucose - s.target) / th.isf_mg_dl_per_u - iob
+            wanted = s.correction_gain * (glucose - s.target) / th.isf_mg_dl_per_u - iob
             limit = s.iob_limit_factor * th.basal_u_h
             extra = max(0.0, wanted) if iob < limit else 0.0
             basal = min(th.basal_u_h + extra, s.max_basal_factor * th.basal_u_h)
             mode = "CLOSED_LOOP"
         carbs = sum(c for t, c in self.meals if self._last_cycle < t <= now)
-        bolus = round(carbs / th.carb_ratio_g_per_u, 2)
+        bolus = round(s.meal_bolus_fraction * carbs / th.carb_ratio_g_per_u, 2)
         self._last_cycle = now
         command_id = self._next_id
         self._next_id += 1
