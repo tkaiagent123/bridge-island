@@ -120,7 +120,8 @@ def parse(data: Any, source: str = "scenario") -> tuple[LoopScenario, str, tuple
     archs = data.get("architectures", list(ARCHS))
     if not isinstance(archs, list) or not archs or set(archs) - set(ARCHS):
         raise ScenarioError(f"{source}: architectures must be a list from {list(ARCHS)}")
-    faults_raw = data.get("faults") or []
+    faults_raw = data.get("faults")
+    faults_raw = [] if faults_raw is None else faults_raw
     if not isinstance(faults_raw, list):
         raise ScenarioError(f"{source}: faults must be a list")
     faults = tuple(_fault(f, f"{source}: faults[{i}]") for i, f in enumerate(faults_raw))
