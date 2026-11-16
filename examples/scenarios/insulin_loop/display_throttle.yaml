@@ -1,0 +1,12 @@
+# Insulin-loop scenario (invented). Synthetic, illustrative; not medical software.
+name: display_throttle
+example: insulin-loop
+description: >-
+  The display's operating system holds the app back for 2 hours from 30 minutes after lunch (half the deliveries dropped, the rest late). The lunch bolus is for the full meal but only a fifth is eaten, so glucose goes low inside the window.
+duration_h: 24
+seed: 1
+patients: all  # VP01..VP30, or one id such as VP01
+architectures: [direct, bridge-basic, bridge-contract]
+faults:
+  - {kind: display_throttle, at: lunch+30, minutes: 120, drop: 0.5}
+  - {kind: meal_eaten, at: lunch, meal: lunch, fraction: 0.2}

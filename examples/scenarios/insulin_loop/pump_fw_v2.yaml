@@ -1,0 +1,11 @@
+# Insulin-loop scenario (invented). Synthetic, illustrative; not medical software.
+name: pump_fw_v2
+example: insulin-loop
+description: >-
+  PumpB firmware v2 (renamed basal field, bolus in 0.05 U pulses, new reservoir field) replaces PumpA at 08:00. The direct adapter is not updated; the Bridge's mapping is.
+duration_h: 24
+seed: 1
+patients: all  # VP01..VP30, or one id such as VP01
+architectures: [direct, bridge-basic, bridge-contract]
+faults:
+  - {kind: pump_swap, at: "08:00"}

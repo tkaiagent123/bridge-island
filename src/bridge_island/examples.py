@@ -9,6 +9,10 @@ from types import ModuleType
 from bridge_island.codegen import load_module
 
 EXAMPLES = {"aviation": "aviation_invented", "medical": "medical_device_invented"}
+# The closed-loop example runs for simulated days with its own scenario format, so it is registered
+# apart from the two classic examples that the short-run app form and the ai-mapping experiment use.
+CLINICAL = {"insulin-loop": "insulin_loop_invented"}
+ALL_EXAMPLES = {**EXAMPLES, **CLINICAL}
 
 
 def examples_dir() -> Path:
@@ -26,9 +30,9 @@ def examples_dir() -> Path:
 
 
 def load_world(name: str) -> ModuleType:
-    if name not in EXAMPLES:
-        raise KeyError(f"unknown example {name!r}; choose from {', '.join(EXAMPLES)}")
-    return load_module(examples_dir() / EXAMPLES[name] / "world.py")
+    if name not in ALL_EXAMPLES:
+        raise KeyError(f"unknown example {name!r}; choose from {', '.join(ALL_EXAMPLES)}")
+    return load_module(examples_dir() / ALL_EXAMPLES[name] / "world.py")
 
 
 def spec_path(world: ModuleType, version: int) -> Path:

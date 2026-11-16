@@ -40,6 +40,16 @@ _UNITS: dict[str, tuple[str, float, float]] = {
     "s": ("time", 1.0, 0.0),
     "ms": ("time", 0.001, 0.0),
     "V": ("voltage", 1.0, 0.0),
+    # Blood glucose concentration. 1 mmol/L of glucose is 18.0182 mg/dL: one millimole of glucose
+    # (C6H12O6, molar mass about 180.16 g/mol) weighs about 180.16 mg, and 1 L is 10 dL. The factor
+    # 18.0182 is the one this example was specified with; the molar-mass value 18.016 differs by
+    # 0.015 %, far below any sensor's resolution.
+    "mg/dL": ("glucose", 1.0, 0.0),
+    "mmol/L": ("glucose", 18.0182, 0.0),
+    # Insulin amount and rate, in international units (U).
+    "U": ("insulin", 1.0, 0.0),
+    "U/h": ("insulin_rate", 1.0, 0.0),
+    "mU/min": ("insulin_rate", 0.06, 0.0),  # 1 mU/min = 60 mU/h = 0.06 U/h
 }
 
 

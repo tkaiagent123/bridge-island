@@ -1,6 +1,8 @@
 """Runnable checks of the design guidelines G1 to G6 against any example world.
 
-Used by ``bridge-island check-rules`` and by the test suite.
+Used by ``bridge-island check-rules`` and by the test suite. A world whose data moves in minutes
+sets ``RULE_TIME_SCALE`` (the runs here are that many times longer), and a world may add its own
+guidelines in ``EXTRA_RULES`` (the insulin loop adds G7 and G8).
 """
 
 from __future__ import annotations
@@ -10,7 +12,6 @@ from dataclasses import dataclass
 from types import ModuleType
 
 from bridge_island.baseline.platform import BaselinePlatform
-from bridge_island.bridge import Bridge
 from bridge_island.codegen import generate, load_module
 from bridge_island.codegen.generate import spec_sha256
 from bridge_island.core.clock import Scheduler
@@ -28,9 +29,13 @@ class RuleResult:
     detail: str
 
 
+def _scale(world: ModuleType) -> float:
+    return float(getattr(world, "RULE_TIME_SCALE", 1.0))
+
+
 def _g1(world: ModuleType, version: int) -> tuple[bool, str]:
     system = world.build(version, 1)
-    system.run(1.0)
+    system.run(1.0 * _scale(world))
     problems = system.network.problems()
     sched = Scheduler()
     platform = BaselinePlatform(sched, world.interface(version), world.sources(version))
@@ -49,11 +54,13 @@ def _g1(world: ModuleType, version: int) -> tuple[bool, str]:
 
 def _g2(world: ModuleType, version: int) -> tuple[bool, str]:
     system = world.build(version, 1)
-    system.run(4.0)
+    system.run(4.0 * _scale(world))
     mapping = load_module(generated_path(world, version))
     dic = world.dictionary(version)
     needs = {(s, n.native_name): n for s, ns in dic.needs.items() for n in ns}
-    sources = world.sources(version)
+    sources = (
+        system.platform.sources
+    )  # the run's own sources (a stateful host gives the same values)
     checked = 0
     for ref, sub, native, identity in mapping.DOWNLINKS:
         element = dic.interface.element(ref)
@@ -81,7 +88,7 @@ def _mean_age(world: ModuleType, version: int, mode: str) -> float:
     mapping = load_module(generated_path(world, version))
     _, sub, native, _ = mapping.DOWNLINKS[0]
     system = world.build(version, 1, time_tag=mode, processing_delay_s=0.050)
-    system.run(3.0)
+    system.run(3.0 * _scale(world))
     ages = [r.age for r in system.subsystems[sub].received if r.native_name == native]
     return float(sum(ages) / len(ages))
 
@@ -102,7 +109,7 @@ def _g4(world: ModuleType, version: int) -> tuple[bool, str]:
     spec = world.interface(version).published[0]
     oiu.rt.on_receive[spec.subaddress](Message("Bogus", {"x": 1}, 0.0))
     refused_out = not oiu.submit(Message("Unspecified", {"x": 1}, 0.0))
-    system.run(1.0)
+    system.run(1.0 * _scale(world))
     ok = oiu.rejected_in == 1 and refused_out and system.platform.rejected == []
     return (
         ok,
@@ -130,7 +137,7 @@ def _g6(world: ModuleType, version: int) -> tuple[bool, str]:
     system = world.build(version, 1)
     b = system.bridge
     assert b is not None
-    parts = [b.oiu, b.tm, b.uid, b.health, b.cyber]
+    parts = [b.oiu, b.tm, b.uid, b.health, b.cyber] + ([b.contract] if b.contract else [])
     one = sum(1 for i in system.network.islands.values() if i == "bridge") == 1
     separate = True
     for part in parts:
@@ -138,8 +145,8 @@ def _g6(world: ModuleType, version: int) -> tuple[bool, str]:
             owner = getattr(value, "__self__", value)
             separate &= not any(owner is other for other in parts if other is not part)
     return (
-        one and separate and len(set(Bridge.PARTITIONS.values())) >= 3,
-        f"one Bridge object: {one}, components hold no direct references to each other: {separate}, partitions: {sorted(set(Bridge.PARTITIONS.values()))}",
+        one and separate and len(set(b.partitions.values())) >= 3,
+        f"one Bridge object: {one}, components hold no direct references to each other: {separate}, partitions: {sorted(set(b.partitions.values()))}",
     )
 
 
@@ -155,4 +162,5 @@ RULES: list[tuple[str, str, Callable[[ModuleType, int], tuple[bool, str]]]] = [
 
 def check_rules(world: ModuleType, version: int | None = None) -> list[RuleResult]:
     version = version or world.VERSIONS[0]
-    return [RuleResult(r, title, *fn(world, version)) for r, title, fn in RULES]
+    rules = RULES + list(getattr(world, "EXTRA_RULES", []))
+    return [RuleResult(r, title, *fn(world, version)) for r, title, fn in rules]

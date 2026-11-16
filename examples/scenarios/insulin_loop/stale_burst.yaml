@@ -1,0 +1,11 @@
+# Insulin-loop scenario (invented). Synthetic, illustrative; not medical software.
+name: stale_burst
+example: insulin-loop
+description: >-
+  For 75 minutes after lunch, readings are held in a relay buffer and arrive in bursts every 30 minutes, with their old sample times.
+duration_h: 24
+seed: 1
+patients: all  # VP01..VP30, or one id such as VP01
+architectures: [direct, bridge-basic, bridge-contract]
+faults:
+  - {kind: sensor_delay, at: lunch+15, minutes: 75, release_every_min: 30}

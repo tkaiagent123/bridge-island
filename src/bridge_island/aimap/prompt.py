@@ -35,6 +35,10 @@ TRANSFORMS: dict[str, tuple[str, str]] = {
         "{valid_range: [0, 3]}",
         "reject values outside the range; it does not change the value",
     ),
+    "quantize": (
+        "{quantize: {scale: 20, encoding: uint16, units: pulse}}",
+        "multiply, round to a whole number and carry it as this integer encoding and unit",
+    ),
 }
 
 FORMAT = """\
