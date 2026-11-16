@@ -1,4 +1,4 @@
-"""The Bridge: one object composing the OIU, TM, UID and the two monitors (G6).
+"""The Bridge: one object composing the OIU, TM, UID and its monitors (G6).
 
 Mixed criticality is handled by internal separation, not by spreading the Bridge across
 several objects: each component sits in its own partition and talks to the others only
@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import ClassVar, Literal
 
 from bridge_island.baseline.platform import BaselineInterface, BaselinePlatform
+from bridge_island.bridge.contract import ContractMonitor, ContractSpec
 from bridge_island.bridge.cyber import CyberMonitor
 from bridge_island.bridge.health import HealthMonitor
 from bridge_island.bridge.oiu import OemInterfaceUnit
@@ -36,6 +37,7 @@ class Bridge:
         "health": "monitor",
         "cyber": "monitor",
     }
+    CONTRACT_PARTITION: ClassVar[tuple[str, str]] = ("contract", "contract-monitor")
 
     def __init__(
         self,
@@ -48,6 +50,8 @@ class Bridge:
         name: str = "bridge",
         rate_policy: Literal["cap", "extrapolate"] = "cap",
         max_extrapolation_s: float | None = None,
+        health_period_s: float = 0.1,
+        contract: ContractSpec | None = None,
     ) -> None:
         self.name = name
         self.sched = sched
@@ -76,7 +80,16 @@ class Bridge:
             ((ref, sub) for ref, sub, _, _ in mapping.DOWNLINKS),
             ((sub, msg) for sub, msg, _ in mapping.UPLINKS),
         )
-        self.health = HealthMonitor(sched, self.log, interface, self._announce)
+        self.health = HealthMonitor(
+            sched, self.log, interface, self._announce, check_period_s=health_period_s
+        )
+        self.contract: ContractMonitor | None = None
+        self.partitions = dict(self.PARTITIONS)  # this Bridge's parts, with the contract if any
+        if contract is not None:
+            self.partitions.update([self.CONTRACT_PARTITION])
+            self.contract = ContractMonitor(
+                contract, sched, self.log, self._submit_up, self._resend_down, self._alarm
+            )
         if network is not None:
             network.add(self)
 
@@ -143,10 +156,17 @@ class Bridge:
                 self.uid.deliver_unavailable(sub, native, reason)
         period = self.health.check_period_s
         self.sched.every(period, self._scan_if_running, start=period)
+        if self.contract is not None:
+            p = self.contract.spec.check_period_s
+            self.sched.every(p, self._contract_scan_if_running, start=p)
 
     def _scan_if_running(self) -> None:
         if not self.stalled:
             self.health.scan()
+
+    def _contract_scan_if_running(self) -> None:
+        if not self.stalled and self.contract is not None:
+            self.contract.scan()
 
     def stall(self, at: float, duration: float) -> None:
         """Fault injection: the Bridge stops processing at ``at`` and resumes after ``duration``."""
@@ -183,6 +203,11 @@ class Bridge:
         if self.stalled:  # in flight when the stall began: released, still old, on resume
             self._hold(msg)
             return
+        if self.contract is not None:
+            checked = self.contract.check_down(msg)
+            if checked is None:
+                return
+            msg = checked
         for d in self.tm.down(msg):
             if self.cyber.check_down(d.ref, d.subsystem):
                 self.uid.deliver(d.subsystem, d.datum)
@@ -203,8 +228,30 @@ class Bridge:
         except TransformError as exc:
             self.tm.rejected += 1
             self.log.add(self.sched.now, "tm", "tm.reject_up", f"{sender}.{msg.spec_name}: {exc}")
+            if self.contract is not None:
+                self.contract.rejected_up(sender, msg.spec_name, str(exc))
             return
+        if self.contract is not None:
+            checked = self.contract.check_up(sender, out)
+            if checked is None:
+                return
+            out = checked
         self.oiu.submit(out)
+
+    # --- callbacks owned by the Bridge, handed to the contract monitor (G6) -------------
+
+    def _submit_up(self, msg: Message) -> None:
+        self.oiu.submit(msg)
+
+    def _resend_down(self, msg: Message) -> None:
+        """Deliver a baseline message again, bypassing the rate cap (a confirmation re-send)."""
+        for d in self.tm.down(msg):
+            if self.cyber.check_down(d.ref, d.subsystem):
+                self.uid.resend(d.subsystem, d.datum)
+
+    def _alarm(self, subsystem: str, kind: str, detail: str) -> None:
+        if subsystem in self.uid.subsystems:
+            self.uid.announce([subsystem], kind, detail)
 
     def _announce(self, subject: str, kind: str, detail: str) -> None:
         """Tell the unique systems that depend on ``subject`` (a message, or the whole Bridge)."""

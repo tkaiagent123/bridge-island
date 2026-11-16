@@ -1,0 +1,86 @@
+# Interface contract for the GGL Bridge (invented). Synthetic, illustrative.
+# Not medical software and not a regulatory document. Every section is enforced by
+# src/bridge_island/bridge/contract.py and tested in tests/test_contract.py.
+
+owner: Integrator Org (invented), which owns the Bridge and this contract
+regulatory_home: >-
+  The integrated system's own design file, under the integrator. The controller host and each
+  peripheral keep their own records; this contract is what the integrator answers for at the boundary.
+
+data_items:
+  - {name: GlucoseReading.glucose, units: mg/dL, range: [40, 400], encoding: float64, role: glucose_value}
+  - {name: GlucoseReading.sensor_status, units: "1", range: [0, 4], encoding: uint8, role: glucose_status}
+  - {name: GlucoseReading.source_time, units: s, range: [0, 10000000], encoding: float64, role: glucose_time}
+  - {name: DoseCommand.command_id, units: "1", range: [1, 4294967295], encoding: uint32, role: command_id}
+  - {name: DoseCommand.basal, units: U/h, range: [0, 5], encoding: float64, role: command_basal}
+  - {name: DoseCommand.bolus, units: U, range: [0, 15], encoding: float64, role: command_bolus}
+  - {name: DoseCommand.valid_until, units: s, range: [0, 10000000], encoding: float64, role: command_valid_until}
+  - {name: DeliveryConfirmation.command_id, units: "1", range: [1, 4294967295], encoding: uint32, role: confirm_id}
+  - {name: DeliveryConfirmation.delivered, units: U, range: [0, 15], encoding: float64, role: confirm_delivered}
+  - {name: DeliveryConfirmation.pump_status, units: "1", range: [0, 3], encoding: uint8, role: confirm_status}
+  - {name: DeliveryConfirmation.reservoir, units: U, range: [0, 400], encoding: float64}
+  - {name: DeliveryConfirmation.battery, units: "%", range: [0, 100], encoding: uint8}
+  - {name: AlarmAck.alarm_id, units: "1", range: [1, 1000000], encoding: uint32, role: ack_id}
+  - {name: ControllerStatus.alarm_code, units: "1", range: [0, 4], encoding: uint8, role: host_alarm}
+
+timing:
+  max_age_s: {GlucoseReading: 660}  # measured from the reading's source time (G3)
+  latency_budget_s: 60  # end to end, sensor sample to controller, and controller to pump
+  check_period_s: 60
+
+failure_behavior:
+  # Stale, missing or out-of-range glucose: send the controller a reading flagged FAILSAFE (4),
+  # hold every command's basal at the fail-safe basal until valid glucose returns, and annunciate.
+  failsafe_basal_u_h: programmed  # the installed patient's programmed basal
+  failsafe_status: 4
+  ok_statuses: [0, 1, 2]  # OK, LOW (reads 40), HIGH (reads 400)
+  unconfirmed_status: 3
+  confirmation: {timeout_s: 120, max_resends: 2}  # a re-send repeats the basal, never the bolus
+  alarm_delivery: {target: CompanionDisplay, ack_timeout_s: 120, max_resends: 2}
+
+security:
+  down: [DoseCommand, ControllerStatus]
+  up: [GlucoseReading, DeliveryConfirmation, AlarmAck]
+  sources:
+    GlucoseReading: [SensorA, SensorB]
+    DeliveryConfirmation: [PumpA, PumpB]
+    AlarmAck: [CompanionDisplay]
+  replay: {by: DoseCommand.command_id, valid_until: DoseCommand.valid_until}
+
+claims:
+  - id: C1
+    text: The controller never acts on glucose older than the maximum age without a fail-safe flag.
+    tests: [tests/test_contract_properties.py::test_property_no_unflagged_stale_glucose]
+  - id: C2
+    text: No command id delivers its bolus twice (replays are blocked; re-sends carry no bolus).
+    tests: [tests/test_contract_properties.py::test_property_bolus_never_twice]
+  - id: C3
+    text: Every fail-safe entry is annunciated to the display, or logged as undelivered with its age.
+    tests: [tests/test_contract_properties.py::test_property_failsafe_annunciated]
+  - id: C4
+    text: An out-of-range or error reading reaches the controller only as a fail-safe-flagged reading.
+    tests: [tests/test_contract.py::test_out_of_range_glucose_is_flagged]
+  - id: C5
+    text: An unconfirmed command is re-sent at most twice, then alarmed, and the controller is told.
+    tests: [tests/test_contract.py::test_unconfirmed_command_retry_then_alarm]
+  - id: C6
+    text: A message from an unlisted sender or in an unlisted direction does not cross.
+    tests: [tests/test_contract.py::test_security_blocks_unlisted_sender_and_direction]
+
+change_envelope:
+  glucose_units: [mg/dL, mmol/L]
+  sample_period_s: [60, 300]
+  sensor_lag_s_max: 900
+  bolus_resolution_u: [0.05, 0.1]
+  field_renames: mapping  # a peripheral's field rename is absorbed by a mapping entry
+  protocols: [label_words, pubsub, command_response]
+  display_latency_s_max: 600
+  max_added_latency_s: 30
+  baseline_versions: [1]  # a new controller-host interface is outside: its owner must review
+
+residual:
+  - Clinical performance of the controller and of the loop as a whole.
+  - Accuracy of the glucose sensor and of the pump's delivery, inside their own specifications.
+  - Human factors, alarm fatigue, training and labeling.
+  - The physiology of any real patient (the model here is invented).
+  - The Bridge's own failure (a stall stops every path; the contract cannot assure itself).

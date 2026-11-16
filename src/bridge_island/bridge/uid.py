@@ -100,7 +100,9 @@ class CommandResponsePort:
     """The UID is the bus controller; the subsystem is a remote terminal."""
 
     def __init__(self, sched: Scheduler, sub: UniqueSubsystem, on_uplink: Uplink) -> None:
-        self.bus = CommandResponseBus(sched, latency_s=sub.bus_latency_s or 0.0005)
+        self.bus = CommandResponseBus(
+            sched, minor_hz=sub.bus_minor_hz or 100.0, latency_s=sub.bus_latency_s or 0.0005
+        )
         bc = BusController("uid")
         rt = RemoteTerminal(sub.name)
         self.bus.set_controller(bc)
@@ -144,7 +146,7 @@ class CommandResponsePort:
                 addr,
                 _UPLINK_SA,
                 "rt_to_bc",
-                every=self.bus.every_for(10),
+                every=self.bus.every_for(min(10, self.bus.minor_hz)),
                 consume=lambda m: on_uplink(sub.name, m) if m else None,
             )
         )
@@ -311,6 +313,11 @@ class UniqueInterfaceDistributor:
         if ok:
             self.estimates += 1
             self._ports[subsystem].send(native, Datum(native, value, now, True, history[-1][0]))
+
+    def resend(self, subsystem: str, datum: Datum) -> None:
+        """Send a datum again on the native connection, outside the rate cap."""
+        self._ports[subsystem].send(datum.element, datum)
+        self.sent += 1
 
     def deliver_unavailable(self, subsystem: str, native: str, reason: str) -> None:
         self._ports[subsystem].send_status(("unavailable", native, reason))

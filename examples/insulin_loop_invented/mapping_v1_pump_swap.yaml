@@ -1,0 +1,57 @@
+# Mapping spec for the invented GGL controller host, baseline interface version 1.
+# Devices: SensorA, PumpA, PumpB firmware v2 (replaces PumpA during the run), CompanionDisplay. Synthetic, illustrative.
+name: ggl_v1_pump_swap
+baseline_version: 1
+world: world.py
+devices: [SensorA, PumpA, PumpB, CompanionDisplay]
+
+downlinks:
+  # CompanionDisplay: shows the host's own units; names the mode and alarm codes
+  - {from: ControllerStatus.glucose, to: CompanionDisplay.glucose}
+  - from: ControllerStatus.loop_mode
+    to: CompanionDisplay.loop_mode
+    transforms: [{enum: {map: {0: CLOSED_LOOP, 1: FALLBACK, 2: SUSPEND}, to_encoding: enum}}]
+  - from: ControllerStatus.alarm_code
+    to: CompanionDisplay.alarm_code
+    transforms: [{enum: {map: {0: NONE, 1: LOW, 2: URGENT_LOW, 3: NO_GLUCOSE, 4: PUMP_COMM}, to_encoding: enum}}]
+  - {from: ControllerStatus.iob, to: CompanionDisplay.iob}
+
+  # PumpA: already in the host's units; the command id goes last
+  - {from: DoseCommand.basal, to: PumpA.basal}
+  - {from: DoseCommand.bolus, to: PumpA.bolus}
+  - {from: DoseCommand.valid_until, to: PumpA.valid_until}
+  - {from: DoseCommand.command_id, to: PumpA.command_id}
+
+  # PumpB firmware v2: basal field renamed, bolus in integer pulses of 0.05 U
+  - {from: DoseCommand.basal, to: PumpB.basal_rate}
+  - {from: DoseCommand.bolus, to: PumpB.bolus, transforms: [{quantize: {scale: 20, encoding: uint16, units: pulse}}]}
+  - {from: DoseCommand.valid_until, to: PumpB.valid_until}
+  - {from: DoseCommand.command_id, to: PumpB.command_id}
+
+uplinks:
+  - from: SensorA.reading
+    to: GlucoseReading
+    fields:
+      - {from: glucose, to: glucose, transforms: [{valid_range: [40, 400]}]}
+      - {from: status, to: sensor_status}
+      - {from: sample_time, to: source_time}
+  - from: PumpA.confirm
+    to: DeliveryConfirmation
+    fields:
+      - {from: command_id, to: command_id}
+      - {from: delivered, to: delivered}
+      - {from: status, to: pump_status}
+      - {from: reservoir, to: reservoir}
+      - {from: battery, to: battery}
+  - from: PumpB.confirm
+    to: DeliveryConfirmation
+    fields:
+      - {from: command_id, to: command_id}
+      - {from: delivered, to: delivered, transforms: [{scale_offset: {scale: 0.05, to_units: U, to_encoding: float64}}]}
+      - {from: status, to: pump_status}
+      - {from: reservoir_units, to: reservoir}
+      - {from: battery, to: battery}
+  - from: CompanionDisplay.ack
+    to: AlarmAck
+    fields:
+      - {from: alarm_id, to: alarm_id, transforms: [{valid_range: [0, 1000000]}]}

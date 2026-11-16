@@ -1,0 +1,11 @@
+# Insulin-loop scenario (invented). Synthetic, illustrative; not medical software.
+name: bridge_stall
+example: insulin-loop
+description: >-
+  The Bridge itself stalls for 20 minutes, 10 minutes after lunch. The single-point-of-failure case: direct has no Bridge to stall.
+duration_h: 24
+seed: 1
+patients: all  # VP01..VP30, or one id such as VP01
+architectures: [direct, bridge-basic, bridge-contract]
+faults:
+  - {kind: bridge_stall, at: lunch+10, minutes: 20}

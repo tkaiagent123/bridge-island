@@ -55,13 +55,14 @@ class BaselinePlatform:
     name: str = "baseline"
     sample_age_s: float = 0.005
     enforce_bridge: bool = True
+    minor_hz: float = 100.0  # bus minor-frame rate; a slow loop (minutes) can use a coarse frame
     island: str = field(default="baseline", init=False)
     accepted: list[tuple[float, Message]] = field(default_factory=list, init=False)
     rejected: list[tuple[float, str]] = field(default_factory=list, init=False)
     emitted: dict[str, int] = field(default_factory=dict, init=False)
 
     def __post_init__(self) -> None:
-        self.bus = CommandResponseBus(self.sched)
+        self.bus = CommandResponseBus(self.sched, minor_hz=self.minor_hz)
         self._bc = BusController(self.name)
         self.bus.set_controller(self._bc)
         self._started = False

@@ -1,0 +1,11 @@
+# Insulin-loop scenario (invented). Synthetic, illustrative; not medical software.
+name: out_of_range
+example: insulin-loop
+description: >-
+  An hour after lunch the sensor sends 600 mg/dL marked OK for three readings, then three readings with an error code.
+duration_h: 24
+seed: 1
+patients: all  # VP01..VP30, or one id such as VP01
+architectures: [direct, bridge-basic, bridge-contract]
+faults:
+  - {kind: sensor_value, at: lunch+60, readings: 3, value: 600}
