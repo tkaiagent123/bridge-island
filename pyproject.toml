@@ -105,6 +105,14 @@ max-complexity = 15
 "src/bridge_island/scenario.py" = ["E501"]
 "src/bridge_island/summary.py" = ["E501"]
 "src/bridge_island/ui.py" = ["E501"]
+"src/bridge_island/clinical/views.py" = ["E501"]
+"src/bridge_island/clinical/story.py" = ["E501"]
+"src/bridge_island/clinical/report.py" = ["E501"]
+"src/bridge_island/clinical/svg.py" = ["E501"]
+"src/bridge_island/clinical/figures.py" = ["E501"]
+"src/bridge_island/clinical/app.py" = ["E501"]
+"src/bridge_island/clinical/cli.py" = ["E501"]
+"src/bridge_island/clinical/experiment.py" = ["E501"]
 
 [tool.mypy]
 python_version = "3.10"

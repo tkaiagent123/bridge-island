@@ -18,7 +18,8 @@ from typing import Any
 import yaml
 
 from bridge_island import __version__
-from bridge_island.examples import EXAMPLES, examples_dir, load_world
+from bridge_island.examples import ALL_EXAMPLES, EXAMPLES, examples_dir, load_world
+from bridge_island.examples import CLINICAL as CLINICAL_EXAMPLES
 from bridge_island.scenario import ScenarioError
 from bridge_island.term import color_enabled, paint
 
@@ -33,6 +34,10 @@ examples:
   bridge-island check-rules --example medical        the G1-G6 checks
   bridge-island experiment change-impact --seed 1    reproducible experiments (CSV, plots)
   bridge-island codegen --spec examples/aviation_invented/mapping_v2.yaml
+  bridge-island demo insulin-loop --story            the closed-loop example as a story
+  bridge-island run examples/scenarios/insulin_loop/sensor_dropout.yaml
+  bridge-island envelope check examples/insulin_loop_invented/changes/01_sensor_swap.yaml --example insulin-loop
+  bridge-island experiment closed-loop --example insulin-loop
 
 All content is invented and all numbers are synthetic, illustrative.
 """
@@ -57,8 +62,10 @@ def _parser() -> argparse.ArgumentParser:
     )
 
     demo = add("demo", "run an invented example on both baseline versions and compare with P2P")
-    demo.add_argument("example", choices=EXAMPLES)
+    demo.add_argument("example", choices=ALL_EXAMPLES)
     demo.add_argument("--seed", type=int, default=1)
+    demo.add_argument("--story", action="store_true", help="insulin-loop: the narrative run")
+    demo.add_argument("--patient", default="VP01", help="insulin-loop: virtual patient VP01..VP30")
     demo.add_argument(
         "--rate-policy",
         choices=["cap", "extrapolate"],
@@ -68,12 +75,12 @@ def _parser() -> argparse.ArgumentParser:
     demo.add_argument("--json", action="store_true", help="machine-readable output")
 
     desc = add("describe", "show the baseline interface, the subsystems and every mapped path")
-    desc.add_argument("example", choices=EXAMPLES)
+    desc.add_argument("example", choices=ALL_EXAMPLES)
     desc.add_argument("--version", dest="iface_version", type=int, help="baseline version")
     desc.add_argument("--format", choices=["text", "markdown", "mermaid", "json"], default="text")
 
     diff = add("diff", "what a baseline version change touches, measured on the real files")
-    diff.add_argument("example", choices=EXAMPLES)
+    diff.add_argument("example", choices=ALL_EXAMPLES)
     diff.add_argument("--from", dest="old", type=int, help="older baseline version")
     diff.add_argument("--to", dest="new", type=int, help="newer baseline version")
     diff.add_argument("--format", choices=["text", "json"], default="text")
@@ -88,7 +95,14 @@ def _parser() -> argparse.ArgumentParser:
     )
 
     rep = add("report", "write one self-contained, offline HTML report for an example")
-    rep.add_argument("example", choices=EXAMPLES)
+    rep.add_argument("example", choices=ALL_EXAMPLES)
+    rep.add_argument("--scenario", help="insulin-loop: scenario name, e.g. sensor_dropout")
+    rep.add_argument(
+        "--patient", default="VP01", help="insulin-loop: virtual patient for the charts"
+    )
+    rep.add_argument(
+        "--no-cohort", action="store_true", help="insulin-loop: skip the 30-patient table"
+    )
     rep.add_argument("--out", type=Path, default=Path("report.html"))
     rep.add_argument("--seed", type=int, default=1)
     rep.add_argument("--duration", type=float, default=6.0, help="simulated seconds (default 6)")
@@ -105,11 +119,22 @@ def _parser() -> argparse.ArgumentParser:
 
     exp = add("experiment", "run a reproducible experiment, writing CSV (and plots)")
     exp.add_argument(
-        "name", choices=["topology", "change-impact", "timing", "containment", "ai-mapping"]
+        "name",
+        choices=[
+            "topology",
+            "change-impact",
+            "timing",
+            "containment",
+            "ai-mapping",
+            "closed-loop",
+            "change-ledger",
+        ],
     )
     exp.add_argument("--seed", type=int, default=1)
     exp.add_argument("--out", type=Path, default=Path("outputs"))
-    exp.add_argument("--example", choices=EXAMPLES, default="aviation")
+    exp.add_argument("--example", choices=ALL_EXAMPLES, default="aviation")
+    exp.add_argument("--workers", type=int, help="closed-loop: worker processes (default: up to 4)")
+    exp.add_argument("--patients", type=int, help="closed-loop: only the first N virtual patients")
     exp.add_argument(
         "--trials",
         type=int,
@@ -130,7 +155,22 @@ def _parser() -> argparse.ArgumentParser:
     ai.add_argument("--cassettes", type=Path, help="cassette directory")
 
     rules = add("check-rules", "run the G1-G6 rule checks on an example")
-    rules.add_argument("--example", choices=EXAMPLES, default="aviation")
+    rules.add_argument("--example", choices=ALL_EXAMPLES, default="aviation")
+
+    env = add(
+        "envelope", "insulin-loop: is a declared peripheral change inside the change envelope?"
+    )
+    env_sub = env.add_subparsers(dest="envelope_command", required=True, metavar="action")
+    chk = env_sub.add_parser("check", help="decide inside or outside for one change file")
+    chk.add_argument("change", type=Path)
+    chk.add_argument("--example", choices=list(CLINICAL_EXAMPLES), default="insulin-loop")
+    chk.add_argument("--json", action="store_true", help="machine-readable output")
+    ver = env_sub.add_parser("verify", help="run the conformance tests generated from the contract")
+    ver.add_argument("--example", choices=list(CLINICAL_EXAMPLES), default="insulin-loop")
+    ver.add_argument(
+        "--change", type=Path, help="run only the tests this change needs, on its devices"
+    )
+    ver.add_argument("--json", action="store_true", help="machine-readable output")
     rules.add_argument("--version", dest="iface_version", type=int, help="baseline version")
     rules.add_argument("--json", action="store_true", help="machine-readable output")
     return p
@@ -171,8 +211,15 @@ def _cmd_list(args: argparse.Namespace) -> int:
             }
         )
     scenarios = [str(p) for p in _scenarios()]
+    from bridge_island.clinical.cli import list_lines
+
+    clinical = {
+        "example": "insulin-loop",
+        "summary": (load_world("insulin-loop").__doc__ or "").splitlines()[0],
+        "scenarios": list_lines(),
+    }
     if args.json:
-        _json({"examples": items, "scenarios": scenarios})
+        _json({"examples": items, "scenarios": scenarios, "clinical": [clinical]})
         return 0
     for item in items:
         print(f"{item['example']:<10}{item['summary']}")
@@ -183,11 +230,18 @@ def _cmd_list(args: argparse.Namespace) -> int:
     if scenarios:
         print("\nscenarios (bridge-island run <file>):")
         print("\n".join(f"  {s}" for s in scenarios))
-    print("\nNext: bridge-island demo aviation")
+    print(f"\n{'insulin-loop':<14}{clinical['summary']}")
+    print("scenarios (24 h, 30 virtual patients, three architectures):")
+    print("\n".join(f"  {s}" for s in clinical["scenarios"]))
+    print("\nNext: bridge-island demo aviation | bridge-island demo insulin-loop --story")
     return 0
 
 
 def _cmd_demo(args: argparse.Namespace) -> int:
+    if args.example in CLINICAL_EXAMPLES:
+        from bridge_island.clinical import cli as clinical_cli
+
+        return clinical_cli.demo(args)
     world = load_world(args.example)
     if args.json:
         from bridge_island.diffing import diff_versions
@@ -257,7 +311,10 @@ def _cmd_diff(args: argparse.Namespace) -> int:
 def _cmd_run(args: argparse.Namespace) -> int:
     from bridge_island import scenario as sc
     from bridge_island import summary as sm
+    from bridge_island.clinical import cli as clinical_cli
 
+    if clinical_cli.is_loop_scenario(args.scenario):
+        return clinical_cli.run(args)
     scenario = sc.load_scenario(args.scenario)
     world = load_world(scenario.example)
     system, version = sc.run_scenario(scenario, world)
@@ -289,6 +346,11 @@ def _cmd_run(args: argparse.Namespace) -> int:
 
 def _cmd_report(args: argparse.Namespace) -> int:
     from bridge_island.report import build_report
+
+    if args.example in CLINICAL_EXAMPLES:
+        from bridge_island.clinical import cli as clinical_cli
+
+        return clinical_cli.report(args)
 
     stall = None
     if args.stall:
@@ -322,6 +384,11 @@ def _cmd_codegen(args: argparse.Namespace) -> int:
 
 def _cmd_experiment(args: argparse.Namespace) -> int:
     from bridge_island import experiments
+
+    if args.name in ("closed-loop", "change-ledger"):
+        from bridge_island.clinical import cli as clinical_cli
+
+        return clinical_cli.experiment(args)
 
     options: dict[str, Any] = {}
     if args.name == "ai-mapping":
@@ -379,6 +446,15 @@ _COMMANDS = {
     "check-rules": _cmd_check_rules,
     "ui": _cmd_ui,
 }
+
+
+def _clinical_envelope(args: argparse.Namespace) -> int:
+    from bridge_island.clinical import cli as clinical_cli
+
+    return clinical_cli.envelope(args)
+
+
+_COMMANDS["envelope"] = _clinical_envelope
 
 
 def main(argv: Sequence[str] | None = None) -> int:

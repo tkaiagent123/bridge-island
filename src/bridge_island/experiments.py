@@ -1,4 +1,4 @@
-"""The four reproducible experiments. Seeded, CSV output, optional plots.
+"""The reproducible experiments. Seeded, CSV output, optional plots.
 
 Every number written or printed here is synthetic and illustrative. These experiments
 demonstrate a structural argument on invented platforms; they are not program data.
@@ -354,6 +354,11 @@ def run(
         from bridge_island.aimap.run import ai_mapping  # imports this module, so load it late
 
         files = ai_mapping(out, seed, world.NAME, trials=trials, **options)
+    elif name in ("closed-loop", "change-ledger"):
+        from bridge_island.clinical import experiment as clinical
+
+        runner = clinical.closed_loop if name == "closed-loop" else clinical.change_ledger
+        files = runner(out, seed)
     else:
         raise KeyError(name)
     for path in files.values():

@@ -8,6 +8,7 @@ an invented model, not clinical results.
 
 from __future__ import annotations
 
+import re
 import statistics
 from typing import Any
 
@@ -35,6 +36,7 @@ DETECTING = (
 HOST_FAULT_ALARMS = ("NO_GLUCOSE", "PUMP_COMM")
 TOLD = ("contract.failsafe", "contract.unconfirmed", "contract.replay_blocked")
 ALARM_ON_TIME_S = 300.0
+LOW_ALARM = re.compile(r"host_alarm: controller alarm code [12]$")
 
 
 def glucose_outcomes(trace: list[float], minutes: int) -> dict[str, Any]:
@@ -82,7 +84,11 @@ def told_events(loop: Loop) -> list[tuple[float, str, str]]:
             for e in loop.bridge.log.events
             if e.kind in TOLD
         ]
-    found += [(t, "display", f"{kind}: {detail}") for t, kind, detail in loop.display.annunciations]
+    found += [
+        (t, "display", f"{kind}: {detail}")
+        for t, kind, detail in loop.display.annunciations
+        if not LOW_ALARM.search(detail)  # a low-glucose alarm is physiology, not a fault report
+    ]
     return sorted(found, key=lambda d: d[0])
 
 
