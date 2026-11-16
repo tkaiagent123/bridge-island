@@ -49,7 +49,7 @@ security:
 
 claims:
   - id: C1
-    text: The controller never acts on glucose older than the maximum age without a fail-safe flag.
+    text: While the Bridge runs, the controller never acts on glucose older than the maximum age without a fail-safe flag (a stalled Bridge cannot flag anything; see residual).
     tests: [tests/test_contract_properties.py::test_property_no_unflagged_stale_glucose]
   - id: C2
     text: No command id delivers its bolus twice (replays are blocked; re-sends carry no bolus).
