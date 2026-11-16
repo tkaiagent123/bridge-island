@@ -92,6 +92,29 @@ def told_events(loop: Loop) -> list[tuple[float, str, str]]:
     return sorted(found, key=lambda d: d[0])
 
 
+def wrong_reading(received: float, meant: float) -> bool:
+    """A reading the controller got that is not what the sensor meant (a unit or encoding error):
+    more than 5 mg/dL or 5 % away, whichever is larger (rounding stays well inside both)."""
+    return abs(received - meant) > max(5.0, 0.05 * meant)
+
+
+def classify_alarms(
+    raised: list[tuple[float, str]], shown: list[tuple[float, str]], end: float
+) -> tuple[int, list[float], list[float]]:
+    """(on time, late delays, lost ages). An alarm counts as shown by the first display entry at
+    or after it that names it; on time means within ``ALARM_ON_TIME_S``."""
+    on_time, late, lost = 0, [], []
+    for t, key in raised:
+        hit = next((s for s, what in shown if s >= t and key in what), None)
+        if hit is None:
+            lost.append(end - t)
+        elif hit - t <= ALARM_ON_TIME_S:
+            on_time += 1
+        else:
+            late.append(hit - t)
+    return on_time, late, lost
+
+
 def _intervals(
     events: list[tuple[float, str]], start_kind: str, end_kind: str, end: float
 ) -> list[tuple[float, float]]:
@@ -165,7 +188,7 @@ def _unit_errors(loop: Loop, row: dict[str, Any], windows: list[tuple[str, float
         if msg.spec_name != "GlucoseReading" or msg.values["sensor_status"] not in (0, 1, 2):
             continue
         truth = meant.get(msg.values["source_time"])
-        if truth is not None and abs(msg.values["glucose"] - truth[0]) > max(5.0, 0.05 * truth[0]):
+        if truth is not None and wrong_reading(msg.values["glucose"], truth[0]):
             to_controller += 1
     to_pump = 0
     for name in (n for n in loop.devices if n.startswith("Pump")):
@@ -190,15 +213,7 @@ def _alarms(loop: Loop, row: dict[str, Any], windows: list[tuple[str, float, flo
     contract = loop.bridge.contract if loop.bridge is not None else None
     if contract is not None:
         raised += [(a.raised_at, f"#{a.id} ") for a in contract.alarms.values()]
-    on_time, late, lost = 0, [], []
-    for t, key in raised:
-        hit = next((s for s, what in shown if s >= t and key in what), None)
-        if hit is None:
-            lost.append(end - t)
-        elif hit - t <= ALARM_ON_TIME_S:
-            on_time += 1
-        else:
-            late.append(hit - t)
+    on_time, late, lost = classify_alarms(raised, shown, end)
     row["alarms_raised"] = len(raised)
     row["alarms_on_time"] = on_time
     row["alarms_late"] = len(late)
