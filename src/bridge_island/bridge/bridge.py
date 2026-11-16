@@ -63,7 +63,14 @@ class Bridge:
         self._held: dict[str, Message] = {}
         self._check_fit()
         self.log = EventLog()
-        self.oiu = OemInterfaceUnit(f"{name}.oiu", interface, sched, self.log, self._on_baseline)
+        self.oiu = OemInterfaceUnit(
+            f"{name}.oiu",
+            interface,
+            sched,
+            self.log,
+            self._on_baseline,
+            self._handover if contract is not None else None,
+        )
         self.tm = TranslatorModule(mapping, sched, self.log, time_tag)
         self.uid = UniqueInterfaceDistributor(
             f"{name}.uid",
@@ -248,6 +255,10 @@ class Bridge:
         for d in self.tm.down(msg):
             if self.cyber.check_down(d.ref, d.subsystem):
                 self.uid.resend(d.subsystem, d.datum)
+
+    def _handover(self, msg: Message) -> Message:
+        """The contract's last look as the baseline takes a message: data can age in the queue."""
+        return self.contract.handover(msg) if self.contract is not None else msg
 
     def _alarm(self, subsystem: str, kind: str, detail: str) -> None:
         if subsystem in self.uid.subsystems:

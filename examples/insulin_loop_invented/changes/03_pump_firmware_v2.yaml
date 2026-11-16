@@ -1,0 +1,13 @@
+# A declared change (invented). Synthetic, illustrative.
+name: pump firmware v2
+description: 'PumpB firmware v2: the basal field is renamed, the bolus is sent as 0.05 U pulses, and the
+  reservoir has a new field name.'
+side: unique
+device: PumpB
+simulate: pump_swap
+declares:
+  field_renames:
+    basal: basal_rate
+    reservoir: reservoir_units
+  bolus_resolution_u: 0.05
+  protocol: command_response

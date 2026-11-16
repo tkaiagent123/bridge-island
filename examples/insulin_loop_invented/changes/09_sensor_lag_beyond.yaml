@@ -1,0 +1,11 @@
+# A declared change (invented). Synthetic, illustrative.
+name: sensor lag beyond
+description: A new sensor model has a 20-minute lag.
+side: unique
+device: SensorB
+simulate: sensor_swap
+declares:
+  glucose_units: mmol/L
+  sample_period_s: 60
+  sensor_lag_s: 1200
+  protocol: pubsub

@@ -186,24 +186,26 @@ def test_old_glucose_is_flagged_and_fresh_glucose_recovers() -> None:
     assert h.mon.failsafe
     h.mon.check_up("SensorA", glucose(130.0, 0, 1000.0 - 800))  # still old: no second alarm
     assert h.kinds().count("contract.alarm") == 1 and "contract.violation" in h.kinds()
-    assert h.mon.check_up("SensorA", glucose(130.0, 0, 1000.0)) is not None
+    fresh = h.mon.check_up("SensorA", glucose(130.0, 0, 1000.0))
+    assert fresh is not None and h.mon.failsafe  # recovery waits for the controller to get it
+    h.mon.handover(fresh)
     assert not h.mon.failsafe and "contract.recovered" in h.kinds()
 
 
 def test_missing_and_stale_glucose_are_found_by_the_periodic_check() -> None:
     h = Harness()
-    h.at(600.0)
+    h.at(560.0)
     h.mon.scan()
-    assert not h.up  # 600 s without data is inside the 660 s limit
-    h.at(700.0)
+    assert not h.up  # flagged at 660 - 90 = 570 s
+    h.at(580.0)
     h.mon.scan()
     assert h.up[-1].values["sensor_status"] == SPEC.failsafe_status
     assert "no glucose" in h.log.of_kind("contract.failsafe")[0].detail
     h = Harness()
-    h.mon.check_up("SensorA", glucose(120.0, 0, 0.0))
-    h.at(661.0)
+    h.mon.handover(glucose(120.0, 0, 0.0))
+    h.at(571.0)
     h.mon.scan()
-    assert "glucose stale" in h.log.of_kind("contract.failsafe")[0].detail
+    assert "is stale" in h.log.of_kind("contract.failsafe")[0].detail
 
 
 # ---- 4: failure behaviour ----------------------------------------------------------------

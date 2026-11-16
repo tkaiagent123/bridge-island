@@ -1,0 +1,8 @@
+# A declared change (invented). Synthetic, illustrative.
+name: sensor period
+description: A SensorA firmware update reports every 2 minutes instead of every 5.
+side: unique
+device: SensorA
+simulate: default
+declares:
+  sample_period_s: 120
