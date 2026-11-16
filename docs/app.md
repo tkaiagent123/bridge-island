@@ -70,6 +70,28 @@ The page across the top has six tabs.
 5. Try **A faulty system sends bad messages**. The Bridge blocks the message and the baseline never sees it.
 6. Open **Check the guidelines** and run it on both examples.
 
+## Insulin loop
+
+The **Insulin loop** tab runs the [closed-loop example](insulin-loop.md). Everything in it is
+synthetic and illustrative: it is not medical software and not for clinical use.
+
+* **Run a scenario.** Choose one of the ten scenarios, one virtual patient or all 30, and the
+  architectures to compare. The result has:
+    * a plain-English explanation and one sentence per architecture, each with its counts;
+    * headline tiles;
+    * the glucose chart, with the 70-180 band, the 70 and 54 lines, the fault time and fail-safe
+      periods shaded;
+    * an insulin delivery strip;
+    * an event timeline that separates "told" (the controller or display was told) from "logged".
+* **Contract card.** The contract's eight parts. Each claim is linked to its test and shows pass or
+  fail from the last conformance run.
+* **Change ledger.** Pick a declared change and see whether it is inside or outside the envelope, the
+  tests to re-run and the organizations to involve.
+
+The three architectures always use the same colours, the same as in the figures. They also differ
+by line style, so colour is never the only clue. In the in-browser version a single patient runs
+in your browser; all 30 patients are desktop only.
+
 ## Is it safe?
 
 The app runs only on your own computer. It listens on the loopback address `127.0.0.1`, so other

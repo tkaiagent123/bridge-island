@@ -1,6 +1,7 @@
 # Experiments
 
-Five experiments demonstrate the structural argument (the fifth tests AI-proposed mappings).
+Seven experiments demonstrate the structural argument. The fifth tests AI-proposed mappings; the sixth
+and seventh run on the insulin-loop example ([Insulin loop](insulin-loop.md)).
 They are seeded and write CSV files,
 and plots too when `matplotlib` is installed (`uv sync --extra plots`).
 
@@ -15,7 +16,9 @@ Each experiment has a CLI command and a script that does the same thing:
 
 ```powershell
 uv run bridge-island experiment <topology|change-impact|timing|containment|ai-mapping> [--seed N] [--out DIR] [--example aviation|medical]
-python experiments/topology_sweep.py      # also: change_impact.py, timing_continuity.py, fault_containment.py
+uv run bridge-island experiment <closed-loop|change-ledger> --example insulin-loop [--seed N] [--out DIR]
+python experiments/topology_sweep.py      # also: change_impact.py, timing_continuity.py, fault_containment.py,
+                                          # closed_loop.py, change_ledger.py
 ```
 
 Output goes to `DIR/<experiment>/` (default `outputs/`). The same seed gives byte-identical
@@ -273,3 +276,157 @@ This shows a mechanism; it does not show that a model is fit for real certificat
 Files: `ai_mapping_trials.csv` (one row per trial), `ai_mapping_entries.csv` (one row per entry per
 trial, with class, confidence and reason), `ai_mapping_summary.csv`, `ai_mapping.png` (stacked
 bars of the entry classes, when matplotlib is installed).
+
+## 6. Closed loop
+
+**Question.** In the [insulin loop](insulin-loop.md), across ten scenarios, does a runtime contract
+monitor at the Bridge detect boundary failures that direct integration misses? And what does the
+Bridge cost?
+
+**Method.** Every scenario was run on the 30 virtual patients and the three architectures (direct,
+bridge-basic, bridge-contract): 900 simulated days. Each architecture got the same patients, meals,
+seeds and faults. Results are counts, and medians with the 5th to 95th percentile across the cohort.
+There are no p-values and no claim of clinical significance. With 4 worker processes, the full matrix
+ran in 66 s on the author's laptop, which was also running other heavy work.
+
+```powershell
+uv run bridge-island experiment closed-loop --example insulin-loop --seed 1
+```
+
+<!-- ggl:closed-loop:start -->
+| Scenario | Architecture | Minutes in 70-180 mg/dL, median [p5, p95] | Patients below 54 | Told: patients, time median [p5, p95] | Patients acting on unflagged stale glucose | Unit or encoding errors through | Alarms late / lost |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| nominal | direct | 1278 [1149, 1440] | 0 | no fault | 0 | 0 | 0 / 0 |
+| nominal | bridge-basic | 1278 [1149, 1440] | 0 | no fault | 0 | 0 | 0 / 0 |
+| nominal | bridge-contract | 1278 [1149, 1440] | 0 | no fault | 0 | 0 | 0 / 0 |
+| sensor_swap_units | direct | 1277 [1117, 1440] | 0 | 30 of 30, 1800 [1800, 1800] s | 30 | 0 | 0 / 0 |
+| sensor_swap_units | bridge-basic | 1277 [1157, 1440] | 0 | 0 of 30 | 0 | 0 | 0 / 0 |
+| sensor_swap_units | bridge-contract | 1277 [1157, 1440] | 0 | 0 of 30 | 0 | 0 | 0 / 0 |
+| sensor_dropout | direct | 1277 [1147, 1440] | 0 | 30 of 30, 1860 [1800, 2040] s | 30 | 0 | 0 / 1 |
+| sensor_dropout | bridge-basic | 1277 [1147, 1440] | 0 | 30 of 30, 1860 [1800, 2040] s | 30 | 0 | 0 / 1 |
+| sensor_dropout | bridge-contract | 1277 [1147, 1440] | 0 | 30 of 30, 360 [300, 540] s | 0 | 0 | 0 / 1 |
+| stale_burst | direct | 1278 [1149, 1440] | 0 | 10 of 30, 1800 [1800, 1800] s | 30 | 0 | 0 / 0 |
+| stale_burst | bridge-basic | 1278 [1149, 1440] | 0 | 10 of 30, 1800 [1800, 1800] s | 30 | 0 | 0 / 0 |
+| stale_burst | bridge-contract | 1278 [1149, 1440] | 0 | 30 of 30, 360 [300, 540] s | 0 | 0 | 0 / 0 |
+| pump_fw_v2 | direct | 882 [689, 1147] | 0 | 30 of 30, 1800 [1800, 1800] s | 0 | 5760 | 0 / 0 |
+| pump_fw_v2 | bridge-basic | 1279 [1149, 1440] | 0 | 0 of 30 | 0 | 0 | 0 / 0 |
+| pump_fw_v2 | bridge-contract | 1279 [1149, 1440] | 0 | 0 of 30 | 0 | 0 | 0 / 0 |
+| pump_silent | direct | 1278 [1149, 1440] | 0 | 30 of 30, 1860 [1800, 2040] s | 0 | 0 | 0 / 0 |
+| pump_silent | bridge-basic | 1278 [1149, 1440] | 0 | 30 of 30, 1860 [1800, 2040] s | 0 | 0 | 0 / 0 |
+| pump_silent | bridge-contract | 1278 [1149, 1440] | 0 | 30 of 30, 480 [420, 660] s | 0 | 0 | 0 / 0 |
+| out_of_range | direct | 1278 [1149, 1440] | 0 | 0 of 30 | 30 | 0 | 0 / 0 |
+| out_of_range | bridge-basic | 1278 [1149, 1440] | 0 | 0 of 30 | 30 | 0 | 0 / 0 |
+| out_of_range | bridge-contract | 1278 [1149, 1440] | 0 | 30 of 30, 77 [17, 257] s | 0 | 0 | 0 / 0 |
+| replayed_command | direct | 1260 [1076, 1399] | 6 | 0 of 30 | 0 | 0 | 0 / 0 |
+| replayed_command | bridge-basic | 1260 [1076, 1397] | 6 | 0 of 30 | 0 | 0 | 0 / 0 |
+| replayed_command | bridge-contract | 1278 [1149, 1440] | 0 | 30 of 30, 0 [0, 0] s | 0 | 0 | 0 / 0 |
+| display_throttle | direct | 1311 [1101, 1418] | 2 | 0 of 30 | 0 | 0 | 15 / 0 |
+| display_throttle | bridge-basic | 1311 [1101, 1418] | 2 | 0 of 30 | 0 | 0 | 15 / 0 |
+| display_throttle | bridge-contract | 1311 [1101, 1418] | 2 | 0 of 30 | 0 | 0 | 27 / 0 |
+| bridge_stall | direct | 1278 [1149, 1440] | 0 | 0 of 30 | 0 | 0 | 0 / 0 |
+| bridge_stall | bridge-basic | 1278 [1149, 1440] | 0 | 30 of 30, 1200 [1200, 1200] s | 30 | 0 | 0 / 0 |
+| bridge_stall | bridge-contract | 1278 [1149, 1440] | 0 | 30 of 30, 1200 [1200, 1200] s | 30 | 0 | 0 / 0 |
+<!-- ggl:closed-loop:end -->
+
+Bridge costs:
+
+<!-- ggl:costs:start -->
+| Architecture | Controller to pump (s), nominal | Sensor to controller (s), nominal | Unneeded fail-safe minutes, nominal (median) | Device paths dead in a 20-min stall (median) | Unflagged stale-glucose minutes in the stall |
+| --- | --- | --- | --- | --- | --- |
+| direct | 0 [0, 0] | 13 [13, 13] | 0.0 | 0 | 0 [0, 0] |
+| bridge-basic | 30 [30, 30] | 13 [13, 13] | 0.0 | 3 | 15 [15, 15] |
+| bridge-contract | 30 [30, 30] | 13 [13, 13] | 0.0 | 3 | 10 [10, 15] |
+<!-- ggl:costs:end -->
+
+**Reading.** On the nominal day the three architectures are indistinguishable. The contract monitor
+changes three things:
+
+* how soon the controller is told about stale, missing or bad glucose;
+* whether it acts on such glucose without a flag;
+* whether a replayed command goes through.
+
+The Bridge's mapping, not the contract, absorbs the two device changes that a stale direct adapter
+gets wrong. The Bridge loses the stall scenario. The display-throttle scenario is not fixed by any
+architecture.
+
+Files:
+
+* `closed_loop_runs.csv`, one row per run;
+* `closed_loop_summary.csv`;
+* `critical_events_<scenario>.csv` (bridge-contract runs);
+* figures 1 to 4 and 6, copied to `docs/images/insulin-loop/` by the script.
+
+## 7. Change ledger
+
+**Question.** For ten declared changes, how many components change code, how many are re-verified,
+how many organizations sign off, and is the change inside a pre-declared envelope?
+
+**Counting model** (stated assumptions in `analysis/change_impact.py`, not measurements):
+
+* A device change always changes the device.
+* A change to what a value means needs integration code: the host's adapter in direct (by default the
+  adapters live in the host), and the mapping on the Bridge.
+* A timing-only change needs no code, but whatever holds the integration is re-verified.
+* bridge-basic has no envelope, so the host owner also signs a change to what a value means.
+  bridge-contract involves the owners the envelope check names.
+* Tests to re-run are the whole conformance suite, except inside the envelope, where only the listed
+  tests run.
+
+```powershell
+uv run bridge-island experiment change-ledger --example insulin-loop
+uv run bridge-island envelope check examples/insulin_loop_invented/changes/01_sensor_swap.yaml --example insulin-loop
+uv run bridge-island envelope verify --example insulin-loop
+```
+
+<!-- ggl:ledger:start -->
+| Change | direct: code / re-verify / orgs / tests | bridge-basic: code / re-verify / orgs / tests | bridge-contract: code / re-verify / orgs / tests |
+| --- | --- | --- | --- |
+| 01_sensor_swap | 2 / 2 / 2 / 49, host touched | 2 / 2 / 3 / 49 | 2 / 2 / 2 / 14, inside |
+| 02_sensor_period | 1 / 2 / 2 / 49, host touched | 1 / 2 / 2 / 49 | 1 / 2 / 2 / 14, inside |
+| 03_pump_firmware_v2 | 2 / 2 / 2 / 49, host touched | 2 / 2 / 3 / 49 | 2 / 2 / 2 / 30, inside |
+| 04_pump_bolus_resolution | 2 / 2 / 2 / 49, host touched | 2 / 2 / 3 / 49 | 2 / 2 / 2 / 30, inside |
+| 05_display_os_update | 1 / 2 / 2 / 49, host touched | 1 / 2 / 2 / 49 | 1 / 2 / 2 / 8, inside |
+| 06_host_baseline_v2 | 2 / 2 / 1 / 49, host touched | 2 / 2 / 2 / 49, host touched | 2 / 2 / 2 / 49, outside, host touched |
+| 07_new_alarm_field | 2 / 2 / 2 / 49, host touched | 2 / 2 / 3 / 49 | 2 / 2 / 3 / 49, outside |
+| 08_field_rename | 2 / 2 / 2 / 49, host touched | 2 / 2 / 3 / 49 | 2 / 2 / 2 / 14, inside |
+| 09_sensor_lag_beyond | 2 / 2 / 2 / 49, host touched | 2 / 2 / 3 / 49 | 2 / 2 / 3 / 49, outside |
+| 10_glucose_units_outside | 2 / 2 / 2 / 49, host touched | 2 / 2 / 3 / 49 | 2 / 2 / 3 / 49, outside |
+<!-- ggl:ledger:end -->
+
+Envelope decisions:
+
+<!-- ggl:envelope:start -->
+| Change | Envelope | Conformance tests to re-run | Organizations to involve |
+| --- | --- | --- | --- |
+| 01_sensor_swap | inside | 14 | Integrator Org (invented); Sensor Maker B (invented) |
+| 02_sensor_period | inside | 14 | Integrator Org (invented); Sensor Maker A (invented) |
+| 03_pump_firmware_v2 | inside | 30 | Integrator Org (invented); Pump Maker Org (invented) |
+| 04_pump_bolus_resolution | inside | 30 | Integrator Org (invented); Pump Maker Org (invented) |
+| 05_display_os_update | inside | 8 | Integrator Org (invented); App Maker Org (invented) |
+| 06_host_baseline_v2 | outside | - | Host Maker Org (invented); Integrator Org (invented) |
+| 07_new_alarm_field | outside | - | Host Maker Org (invented); Integrator Org (invented); App Maker Org (invented) |
+| 08_field_rename | inside | 14 | Integrator Org (invented); Sensor Maker A (invented) |
+| 09_sensor_lag_beyond | outside | - | Integrator Org (invented); Host Maker Org (invented); Sensor Maker B (invented) |
+| 10_glucose_units_outside | outside | - | Integrator Org (invented); Host Maker Org (invented); Sensor Maker B (invented) |
+<!-- ggl:envelope:end -->
+
+![Change ledger](images/insulin-loop/fig5_change_ledger.png)
+
+**Reading.** The counts barely move between architectures. What moves is where the work lands:
+
+* **direct:** every peripheral change touches the cleared controller host;
+* **bridge-basic:** the host's code is untouched, but without an envelope its owner still has to sign;
+* **bridge-contract:** inside the envelope, only the integrator and the device maker are involved,
+  and only the listed conformance tests are re-run.
+
+Outside the envelope, the check names who must review and why. A change to the host's own interface
+touches the host in every architecture.
+
+**Sensitivity.** `change_ledger_sensitivity.csv` repeats the direct case with the adapters living in
+the devices instead of the host. The host is then untouched in direct too, and the remaining
+difference is the envelope and its conformance tests.
+
+The FDA's draft guidance on predetermined change control plans (August 22, 2024) describes, in its
+sample plan, adding a wireless card and upgrading the operating system on a patient monitor. An
+envelope of declared peripheral changes, each with generated conformance tests, is consistent with
+how such a plan is described. Nothing here computes a regulatory outcome.

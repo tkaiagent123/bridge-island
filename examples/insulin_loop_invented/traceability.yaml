@@ -1,0 +1,159 @@
+# Requirements traceability for the GGL Bridge (RQ1). An engineering illustration, not a regulatory
+# submission and not a claim of compliance. Requirement texts are paraphrases, with their section.
+# status: demonstrated (a test exists and passes) | partial | not addressed
+# tests/test_traceability.py fails if a row cites a test that does not exist or does not pass.
+
+sources:
+  CFR: 21 CFR 862.1356, Interoperable automated glycemic controller, special controls
+  MFDP: FDA guidance, Multiple Function Device Products - Policy and Considerations (July 2020)
+  PCCP: FDA draft guidance, Predetermined Change Control Plans for Medical Devices (August 22, 2024)
+  IEC80001: IEC 80001-1:2021, application of risk management for IT-networks incorporating medical devices
+
+rows:
+  - id: T01
+    source: CFR
+    section: (b)(1)
+    requirement: Secure and reliable transmission between the controller and connected devices.
+    contract_field: security
+    bridge_behaviour: Only listed messages cross, only in their direction and from their listed senders; command replays and expired commands are blocked. No cryptographic authentication or encryption is modelled.
+    tests:
+      - tests/test_contract.py::test_security_blocks_unlisted_sender_and_direction
+      - tests/test_contract.py::test_replays_and_expired_commands_are_blocked
+    status: partial
+  - id: T02
+    source: CFR
+    section: (b)(1)
+    requirement: Specifications for the connected input devices and command devices the controller works with.
+    contract_field: data_items
+    bridge_behaviour: Every crossing item has units, range, encoding and role in the contract; a conformance suite generated from it passes on each device set.
+    tests:
+      - tests/test_contract.py::test_the_shipped_contract_has_all_eight_sections
+      - tests/test_insulin_surfaces.py::test_the_conformance_suite_passes_on_every_device_set
+    status: demonstrated
+  - id: T03
+    source: CFR
+    section: (b)(1)
+    requirement: Safe therapy when communication is interrupted, lost or restored.
+    contract_field: failure_behavior
+    bridge_behaviour: Lost, stale or out-of-range glucose gives the controller a FAILSAFE-flagged reading and holds the programmed basal until valid data reaches it again. While the Bridge itself is stalled it cannot do this; the host's watchdog and the pump's command expiry then carry the case.
+    tests:
+      - tests/test_insulin_loop.py::test_g7_every_loss_state_ends_in_failsafe
+      - tests/test_contract_properties.py::test_property_no_unflagged_stale_glucose
+      - tests/test_insulin_loop.py::test_a_bridge_stall_fails_every_path_and_direct_has_nothing_to_stall
+    status: partial
+  - id: T04
+    source: CFR
+    section: (b)(3)
+    requirement: Validated interface specifications covering device pairing.
+    contract_field: none
+    bridge_behaviour: Pairing is not modelled; devices are attached when the system is built.
+    tests: []
+    status: not addressed
+  - id: T05
+    source: CFR
+    section: (b)(3)
+    requirement: Validated interface specifications covering accurate transmission of data and commands.
+    contract_field: data_items
+    bridge_behaviour: Units and encodings are converted by the compiled mapping (mmol/L to mg/dL, units to pump pulses) and checked by the conformance suite; a stale direct adapter is shown mis-dosing without it.
+    tests:
+      - tests/test_insulin_loop.py::test_a_stale_adapter_misdoses_a_new_pump_silently
+      - tests/test_insulin_physiology.py::test_glucose_units_convert_with_the_stated_factor
+    status: demonstrated
+  - id: T06
+    source: CFR
+    section: (b)(3)
+    requirement: Validated interface specifications covering the sharing of state information.
+    contract_field: failure_behavior
+    bridge_behaviour: The controller's status reaches the display; the controller is told when a command goes unconfirmed. Device state beyond confirmation (reservoir, battery) passes through without checks of its own.
+    tests:
+      - tests/test_contract.py::test_unconfirmed_command_retry_then_alarm
+    status: partial
+  - id: T07
+    source: CFR
+    section: (b)(3)
+    requirement: Continued safe operation when data arrive outside specified parameters.
+    contract_field: data_items, timing
+    bridge_behaviour: Out-of-range, error-coded or too-old readings reach the controller only flagged FAILSAFE, including readings that aged in the queue to the controller.
+    tests:
+      - tests/test_contract.py::test_out_of_range_glucose_is_flagged
+      - tests/test_contract.py::test_old_glucose_is_flagged_and_fresh_glucose_recovers
+    status: demonstrated
+  - id: T08
+    source: CFR
+    section: (b)(3)
+    requirement: Validated interface specifications covering a software update mechanism.
+    contract_field: change_envelope
+    bridge_behaviour: A declared peripheral change is checked against the envelope, with the conformance tests to re-run; how updates are delivered and installed is not modelled.
+    tests:
+      - tests/test_insulin_surfaces.py::test_envelope_decision_for_every_shipped_change
+    status: partial
+  - id: T09
+    source: CFR
+    section: (b)(4)
+    requirement: Critical event records covering commands and confirmations, malfunctions, alarms and acknowledgments, and connectivity lost and restored.
+    contract_field: failure_behavior
+    bridge_behaviour: Each bridge-contract run exports a critical event record with all four groups.
+    tests:
+      - tests/test_insulin_loop.py::test_critical_events_cover_the_required_categories
+    status: demonstrated
+  - id: T10
+    source: MFDP
+    section: separation of functions
+    requirement: Separation of the device function under review from other functions, so that they can be assessed apart.
+    contract_field: owner, regulatory_home
+    bridge_behaviour: The controller host stays unchanged; integration lives in one Bridge whose parts are separate partitions (G6). The separation is logical, inside one process.
+    tests:
+      - tests/test_insulin_loop.py::test_g1_to_g6_hold_for_the_insulin_loop
+    status: partial
+  - id: T11
+    source: PCCP
+    section: modification protocol
+    requirement: A modification protocol stating how planned changes are developed, verified and implemented.
+    contract_field: change_envelope
+    bridge_behaviour: The envelope declares which peripheral changes are absorbed; the conformance suite generated from the contract is the verification for them.
+    tests:
+      - tests/test_insulin_surfaces.py::test_the_conformance_suite_is_generated_from_the_contract
+      - tests/test_insulin_surfaces.py::test_the_conformance_suite_passes_on_every_device_set
+    status: partial
+  - id: T12
+    source: PCCP
+    section: impact assessment
+    requirement: An impact assessment of the planned changes.
+    contract_field: change_envelope
+    bridge_behaviour: The change ledger counts components, re-verification and sign-offs per change under a stated counting model.
+    tests:
+      - tests/test_insulin_surfaces.py::test_the_ledger_follows_its_counting_model
+    status: partial
+  - id: T13
+    source: IEC80001
+    section: responsibilities
+    requirement: Defined responsibilities of the parties when medical devices are connected.
+    contract_field: owner, regulatory_home
+    bridge_behaviour: The contract names its owner; each envelope decision names the organizations to involve and why.
+    tests:
+      - tests/test_insulin_surfaces.py::test_envelope_decision_for_every_shipped_change
+    status: partial
+  - id: T14
+    source: CFR
+    section: clinical performance
+    requirement: Clinical data on the controller's performance.
+    contract_field: residual
+    bridge_behaviour: Outside the Bridge.
+    tests: []
+    status: not addressed (outside the Bridge)
+  - id: T15
+    source: CFR
+    section: human factors
+    requirement: Human factors testing of the system and its alarms.
+    contract_field: residual
+    bridge_behaviour: Outside the Bridge.
+    tests: []
+    status: not addressed (outside the Bridge)
+  - id: T16
+    source: CFR
+    section: training and labeling
+    requirement: Training and labeling for users.
+    contract_field: residual
+    bridge_behaviour: Outside the Bridge.
+    tests: []
+    status: not addressed (outside the Bridge)

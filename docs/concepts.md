@@ -26,6 +26,7 @@ The Bridge is one object (`bridge_island.bridge.Bridge`) with five parts.
 | **Unique Interface Distributor (UID)** | Keeps a separate connection to each unique system, in that system's own native format. It acts as the *controlling side* toward the unique systems. |
 | **Health monitor** | A background service. It detects stale data and stall-and-resume discontinuities, and annunciates them to the affected systems. |
 | **Cyber monitor** | A background service. It enforces which data may cross, and in which direction. |
+| **Contract monitor** (optional) | Checks every crossing against a declarative interface contract: units, ranges, encodings, data age, confirmations, replays and alarm delivery. It applies the contract's fail-safe output when data is lost. It is its own partition, and acts only through callbacks the Bridge owns (G6). The insulin-loop example uses it. |
 
 ```mermaid
 sequenceDiagram
@@ -58,7 +59,10 @@ command/response bus, sole transmitter on a label-word bus, publisher on a pub/s
 Bridge therefore decides when each unique system hears from it, and a unique system cannot
 start a conversation with the baseline.
 
-## The six design guidelines
+## The design guidelines
+
+G1 to G6 apply to every example. The insulin-loop example adds G7 and G8, described
+[below](#g7-and-g8-for-the-insulin-loop).
 
 Each guideline is implemented as runtime behavior and checked by tests whose names start
 with the guideline number (for example `test_g3_source_time_preserved`).
@@ -108,6 +112,23 @@ Mixed criticality is handled by separation *inside* the object: each part sits i
 partition (baseline-facing, translation, unique-facing, monitor), and the parts hold no
 direct references to each other. They communicate only through callbacks owned by the
 Bridge.
+
+## G7 and G8, for the insulin loop
+
+These apply only to the [insulin-loop example](insulin-loop.md), and `bridge-island check-rules
+--example insulin-loop` runs them after G1 to G6.
+
+**G7. Clinical fail-safe first.** Every state in which the Bridge loses valid glucose data maps to the
+contract's fail-safe output. The states are readings that stop, arrive late, are out of range, or a
+Bridge stall followed by its resume. In each one:
+
+* the controller gets a reading flagged FAILSAFE;
+* every dose command carries the installed patient's programmed basal until valid glucose reaches the
+  controller again.
+
+**G8. Degradation is visible.** Every fail-safe or alarm state produces an annunciation that reaches
+the companion display. If the display does not acknowledge it after the allowed re-sends, it is
+logged as undelivered with its age.
 
 ## How age is measured
 

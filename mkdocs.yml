@@ -31,6 +31,10 @@ nav:
   - Command-line reference: cli.md
   - Scenarios: scenarios.md
   - Experiments: experiments.md
+  - Insulin loop:
+      - The example: insulin-loop.md
+      - Requirements traceability: insulin-loop-traceability.md
+      - Design note: dev/insulin-loop-design.md
   - Design rationale and limitations: rationale.md
   - Related work: related-work.md
   - API reference: api.md
