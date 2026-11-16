@@ -79,6 +79,8 @@ TARGETS: dict[str, list[str]] = {
     "clinical/envelope.py": ["tests/test_insulin_surfaces.py"],
 }
 INSULIN = [t for t in TARGETS if t.startswith("clinical/") or t == "bridge/contract.py"]
+for _t in INSULIN:
+    TARGETS[_t] += ["tests/test_insulin_golden.py", "tests/test_insulin_edges.py"]
 
 for _tests in TARGETS.values():
     if "tests/test_mutation_gaps.py" not in _tests:
