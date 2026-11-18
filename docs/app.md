@@ -25,10 +25,11 @@ a second or two. You need [uv](https://docs.astral.sh/uv/) installed once.
 
 ![The first page of the app: quick starts, choices for the example and the Bridge's behaviour, and things that can go wrong](images/app-home.png)
 
-The page across the top has six tabs.
+The page across the top has eight tabs; the Insulin loop tab is described [below](#insulin-loop).
 
 | Tab | What it is for |
 | --- | --- |
+| **Tour** | A picture book for first-time readers: the architecture, the data flow and the faults, drawn and animated. Start here if the system is new to you. Each fault links to a run of it. |
 | **Run a simulation** | Choose an example, how long to run, how the Bridge behaves, and what goes wrong (a stall, a faulty system). The *Quick starts* fill the form with common cases. |
 | **Scenario files** | Run one of the shipped scenarios, or paste your own. A scenario file describes one run completely, so it can be shared and repeated. |
 | **Full report** | One page with everything for an example. Open it here, or download it as a single file that works offline. |
@@ -77,7 +78,7 @@ synthetic and illustrative: it is not medical software and not for clinical use.
 
 The tab has the same pages as the main simulation, each on the insulin loop:
 
-* **Tour.** Start here if the system is new to you. Three pictures of the architecture: the three islands, the data flow (play all six messages or pick one) and the faults (pick one and see where messages stop). Each fault links to a run of it.
+* **Tour.** The same tour drawn for the sensor, pump and phone display, with the insulin loop's own faults. The general version is the **Tour** tab at the top of the app.
 * **Run a scenario.** Three steps. Choose one virtual patient or all 30, the controller host version
   and the architectures to compare; pick a quick start and optionally add up to two faults of your
   own (a kind, a start time such as `08:00` or `lunch+15`, and a length); set the hours and seed. The

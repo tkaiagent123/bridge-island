@@ -605,7 +605,9 @@ def get(app: Any, path: str, query: Mapping[str, list[str]]) -> tuple[str, str]:
             + run_form(app, query)
         )
     if path == "/insulin/tour":
-        return "Tour", _head("Tour: how it works", "/insulin/tour") + explain.tour_page()
+        return "Tour", _head(
+            "Tour: the insulin loop", "/insulin/tour"
+        ) + explain.insulin_tour_page()
     if path == "/insulin/scenarios":
         return "Scenario files", scenarios_page(app)
     if path == "/insulin/report":
