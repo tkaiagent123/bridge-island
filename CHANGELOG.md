@@ -9,6 +9,8 @@ and the project follows [Semantic Versioning](https://semver.org/).
 ### Added
 - A **Tour** tab for first-time readers: the architecture, the data flow (play all six messages or step through one) and the faults (a red dashed line and a cross show where messages stop, a red dot is a message that cannot be trusted), drawn as inline SVG with CSS animation only (no script; honours reduced motion). Each fault links to a run of it. The Insulin loop tab has the same tour drawn for its own devices.
 
+- The in-browser page counts visits anonymously with GoatCounter (no cookies, nothing you enter), and says so.
+
 ### Fixed
 - `bridge-island describe` now lists output-only systems such as the sensor.
 
