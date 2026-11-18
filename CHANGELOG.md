@@ -9,6 +9,9 @@ and the project follows [Semantic Versioning](https://semver.org/).
 ### Added
 - A fifth experiment, `bridge-island experiment ai-mapping`: can a model propose the Bridge's mapping for a new baseline version, do the contract checks catch the bad proposals, and how often does a wrong one get through every check marked as confident? Controls (`oracle`, `carry_forward`, a non-AI `heuristic`), three variants (`plain`, `obfuscated`, `perturbed`), replay by default, cassettes for live runs, and an optional `ai` extra for the provider packages.
 
+### Documentation
+- Related work now covers the U.S. Air Force OMS Isolator, the A-GRA Vehicle Interface and AMS GRA, with a vocabulary table and where they differ from the Bridge.
+
 ## [0.1.2] - 2026-11-09
 
 ### Added
