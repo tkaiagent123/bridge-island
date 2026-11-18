@@ -34,6 +34,7 @@ import yaml
 
 import bridge_island
 from bridge_island import experiments
+from bridge_island.clinical import explain
 from bridge_island.clinical.svg import CSS as SVG_CSS
 from bridge_island.dashboard import CSS as DASHBOARD_CSS
 from bridge_island.dashboard import dashboard
@@ -62,6 +63,7 @@ KEEP_RESULTS = 12
 NOTE = "All content is invented. Numbers are synthetic, illustrative."
 
 NAV = [
+    ("/tour", "Tour"),
     ("/", "Run a simulation"),
     ("/scenarios", "Scenario files"),
     ("/report", "Full report"),
@@ -340,6 +342,8 @@ class App:
     def _get(self, path: str, query: Mapping[str, list[str]]) -> Response:
         if path == "/":
             return self._page("Run a simulation", self._home(query), "/")
+        if path == "/tour":
+            return self._page("Tour", "<h1>Tour: how it works</h1>" + explain.tour_page(), "/tour")
         if path == "/scenarios":
             return self._page("Scenario files", self._scenarios_page(), "/scenarios")
         if path == "/report":
@@ -465,7 +469,7 @@ class App:
         lede = (
             '<p class="lede">See what happens when a platform you cannot change is updated, stalls or '
             "misbehaves, and how a single mediation layer, the Bridge, keeps independent systems "
-            "informed. Three steps, then a plain-English result.</p><!--form-->"
+            "informed. New here? Take the <a href='/tour'>tour</a> first. Three steps, then a plain-English result.</p><!--form-->"
         )
         return f"<h1>bridge-island</h1>{lede}{error}{form}"
 

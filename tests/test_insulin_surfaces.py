@@ -373,13 +373,23 @@ def test_app_insulin_tab_has_the_main_simulations_features() -> None:
     )
 
 
-def test_app_tour_page_draws_the_architecture_flow_and_faults() -> None:
+def test_app_tours_draw_the_architecture_flow_and_faults() -> None:
+    from bridge_island.ui import PRESETS
+
     app, host = _app()
-    page = app.handle("GET", "/insulin/tour", host).body.decode()
-    assert page.count("<svg") == 3 and "<script" not in page and "http" not in page.split("<h1>")[1]
-    assert page.count('type="radio"') == 7 + 6  # play all + 6 steps, no fault + 5 faults
-    assert "prefers-reduced-motion" in page and "The Bridge itself stalls" in page
-    assert (
-        "scenario=bridge_stall" in page
-        and "tour</a>" in app.handle("GET", "/insulin", host).body.decode()
-    )
+    for path, faults, run in (
+        ("/tour", 4, "/?stall=1"),
+        ("/insulin/tour", 5, "scenario=bridge_stall"),
+    ):
+        page = app.handle("GET", path, host).body.decode()
+        assert page.count("<svg") == 3 and "<script" not in page and run in page
+        assert page.count('type="radio"') == 7 + 1 + faults  # play all + 6 steps, no fault + faults
+        assert "prefers-reduced-motion" in page and "aria-current=page" in page
+    assert "Tour" in app.handle("GET", "/", host).body.decode()
+    # each generic run link is one of the app's own quick starts
+    from bridge_island.clinical.explain import GENERIC
+
+    quick = [{k: str(v) for k, v in q.items()} for _, q in PRESETS]
+    for f in GENERIC.faults:
+        want = dict(kv.split("=") for kv in f.href[2:].split("&"))
+        assert any(want.items() <= q.items() for q in quick), f.href
