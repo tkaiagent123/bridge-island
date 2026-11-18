@@ -5,7 +5,7 @@ You can run the app without installing anything: **[open the in-browser app](onl
 It is the same app as `bridge-island ui`, with the same pages (run a simulation, scenario files,
 full report, guideline checks, experiments, help). Python runs inside your browser using
 [Pyodide](https://pyodide.org). Nothing you enter is uploaded, and nothing is saved unless you
-download it.
+download it. The page counts visits anonymously with [GoatCounter](https://www.goatcounter.com) (the page, the referrer and the browser type; no cookies, and nothing you enter). The app on your own computer counts nothing.
 
 What to expect:
 
