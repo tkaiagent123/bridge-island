@@ -48,6 +48,19 @@ EXPLAIN = {
 }
 
 
+def describe_scenario(scenario: L.LoopScenario) -> str:
+    """The shipped explanation, or a plain list of the faults for a scenario the user changed."""
+    if scenario.name in EXPLAIN:
+        return EXPLAIN[scenario.name]
+    faults = "; ".join(
+        f"{f.kind.replace('_', ' ')} at {f.at}" + (f" for {f.minutes:g} min" if f.minutes else "")
+        for f in scenario.faults
+    )
+    return (scenario.description + " " if scenario.description else "") + (
+        f"Faults: {faults}." if faults else "No faults."
+    )
+
+
 def _num(x: float) -> str:
     return f"{int(x):,}" if float(x).is_integer() and abs(x) >= 1e5 else f"{x:g}"
 
@@ -139,14 +152,18 @@ def _minutes(seconds: Any) -> str:
 
 
 def single_run(
-    scenario_name: str, patient: int, archs: Sequence[str], seed: int = 1
+    scenario_name: str | L.LoopScenario,
+    patient: int,
+    archs: Sequence[str],
+    seed: int = 1,
+    version: int = 1,
 ) -> dict[str, Any]:
     from bridge_island.clinical import scenarios as S
 
-    scenario = S.by_name(scenario_name)
+    scenario = S.by_name(scenario_name) if isinstance(scenario_name, str) else scenario_name
     loops = {}
     for arch in archs:
-        lp = L.build_loop(arch, L.patients(seed)[patient], scenario)
+        lp = L.build_loop(arch, L.patients(seed)[patient], scenario, version=version)
         lp.run()
         loops[arch] = lp
     return {
@@ -156,10 +173,16 @@ def single_run(
     }
 
 
-def run_view(scenario_name: str, patient: int, archs: Sequence[str], seed: int = 1) -> str:
+def run_view(
+    scenario_name: str | L.LoopScenario,
+    patient: int,
+    archs: Sequence[str],
+    seed: int = 1,
+    version: int = 1,
+) -> str:
     from bridge_island.clinical.figures import failsafe_spans
 
-    data = single_run(scenario_name, patient, archs, seed)
+    data = single_run(scenario_name, patient, archs, seed, version)
     scenario, loops, rows = data["scenario"], data["loops"], data["rows"]
     first = next(iter(loops.values()))
     events = [(s, k.replace("_", " ")) for k, s, _ in L.fault_windows(scenario, first.meals)]
@@ -189,9 +212,9 @@ def run_view(scenario_name: str, patient: int, archs: Sequence[str], seed: int =
     timeline.sort()
     pid = L.patients(seed)[patient].id
     return (
-        f'<p class="banner">{E(DISCLAIMER)} Virtual patient {E(pid)}, seed {seed}, 24 h simulated.</p>'
-        f"<h2>What happened</h2><p>{E(EXPLAIN.get(scenario.name, scenario.description))}</p>"
-        f"<ul class='found'>{''.join(f'<li>{E(s)}</li>' for s in explain_rows(scenario.name, rows))}</ul>"
+        f'<p class="banner">{E(DISCLAIMER)} Virtual patient {E(pid)}, seed {seed}, {scenario.duration_s / 3600:g} h simulated, host baseline version {version}.</p>'
+        f"<h2>What happened</h2><p>{E(describe_scenario(scenario))}</p>"
+        f"<ul class='found'>{''.join(f'<li>{E(s)}</li>' for s in explain_rows(scenario.name, rows, round(scenario.duration_s / 60)))}</ul>"
         f'<div class="tiles">{tiles}</div>'
         f"<h2>Glucose</h2><p>{svg.legend(list(loops))}</p>"
         + '<p class="hint">Where two architectures give the same glucose, their lines lie on top of each other.</p>'
@@ -217,11 +240,11 @@ def run_view(scenario_name: str, patient: int, archs: Sequence[str], seed: int =
     )
 
 
-def explain_rows(name: str, rows: dict[str, dict[str, Any]]) -> list[str]:
+def explain_rows(name: str, rows: dict[str, dict[str, Any]], minutes: int = 1440) -> list[str]:
     """Plain sentences, each with its count, comparing the architectures that ran."""
     out = []
     for arch, r in rows.items():
-        bits = [f"{r['tir_70_180_min']} of 1440 minutes in 70-180 mg/dL"]
+        bits = [f"{r['tir_70_180_min']} of {minutes} minutes in 70-180 mg/dL"]
         if r["below_54_min"]:
             bits.append(f"{r['below_54_min']} minutes below 54")
         if r["detected"] is not None:
@@ -255,8 +278,12 @@ def explain_rows(name: str, rows: dict[str, dict[str, Any]]) -> list[str]:
 
 
 def cohort_view(
-    scenario_name: str, archs: Sequence[str], seed: int = 1, workers: int | None = None
+    scenario_name: str | L.LoopScenario,
+    archs: Sequence[str],
+    seed: int = 1,
+    workers: int | None = None,
 ) -> str:
+    from bridge_island.clinical import scenarios as S
     from bridge_island.clinical.experiment import run_matrix
 
     rows, _ = run_matrix([scenario_name], archs, range(30), seed, workers)
@@ -285,7 +312,7 @@ def cohort_view(
     )
     return (
         f'<p class="banner">{E(DISCLAIMER)} 30 virtual patients, seed {seed}.</p>'
-        f"<h2>What happened</h2><p>{E(EXPLAIN.get(scenario_name, ''))}</p>{table}"
+        f"<h2>What happened</h2><p>{E(describe_scenario(S.by_name(scenario_name) if isinstance(scenario_name, str) else scenario_name))}</p>{table}"
     )
 
 

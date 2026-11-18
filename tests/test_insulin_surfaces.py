@@ -320,3 +320,54 @@ def test_cohort_runs_are_desktop_only_in_the_browser() -> None:
     assert "desktop only" in _post(
         app, host, "/insulin", scenario="nominal", patient="cohort", arch="direct"
     )
+
+
+def test_app_insulin_tab_has_the_main_simulations_features() -> None:
+    app, host = _app()
+    for path, text in [
+        ("/insulin", "Quick starts"),
+        ("/insulin/scenarios", "Run the pasted scenario"),
+        ("/insulin/report", "Open the report"),
+        ("/insulin/guidelines", "G8"),
+        ("/insulin/experiments", "Change ledger"),
+        ("/insulin/help", "Fault kinds"),
+    ]:
+        assert text in app.handle("GET", path, host).body.decode()
+    page = _post(
+        app,
+        host,
+        "/insulin",
+        scenario="sensor_dropout",
+        patient="VP02",
+        arch="direct",
+        f1_kind="bridge_stall",
+        f1_at="lunch+120",
+        f1_minutes="20",
+        duration_h="12",
+    )
+    assert "plus_your_faults" in page and "Keep the results" in page and "12 h simulated" in page
+    assert "scenario.yaml" in page and "Change something and run again" in page
+    assert "8 of 8 pass" in _post(app, host, "/insulin/guidelines")
+    assert "Result" in _post(app, host, "/insulin/scenarios", name="pump_silent")
+    assert "Choose a scenario" in _post(app, host, "/insulin/scenarios", name="../x")
+    assert "clock time runs" in _post(
+        app,
+        host,
+        "/insulin",
+        scenario="nominal",
+        patient="VP01",
+        arch="direct",
+        f1_kind="sensor_dropout",
+        f1_at="25:99",
+    )
+    doc = app.handle(
+        "POST",
+        "/insulin/report",
+        host,
+        urlencode(
+            {"t": app.token, "scenario": "nominal", "patient": "VP01", "mode": "download"}
+        ).encode(),
+    )
+    assert (
+        "attachment" in doc.headers["Content-Disposition"] and b"Generic Glycemic Loop" in doc.body
+    )

@@ -376,8 +376,10 @@ class App:
             from bridge_island.clinical import app as clinical_app
 
             with self._lock:
-                title, body = clinical_app.post(self, path, form)
-            return self._page(title, body, "/insulin")
+                result = clinical_app.post(self, path, form)
+            if result[0] == "":  # a whole document (the report), not a page of the app
+                return Response(200, result[1].encode("utf-8"), headers=result[2])  # type: ignore[misc]
+            return self._page(result[0], result[1], "/insulin")
         return self._plain(404, "Not found.")
 
     def _download(self, path: str) -> Response:

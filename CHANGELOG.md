@@ -6,6 +6,9 @@ and the project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- The Insulin loop tab now has the main simulation's features: a three-step run form with quick starts, your own faults, controller host version, hours and seed, and downloads; scenario files; the full report; guidelines G1 to G8; experiments; and a help page. Clock times in insulin-loop scenario files are checked (00:00 to 23:59).
+
 ## [0.2.0] - 2026-11-15
 
 ### Added
