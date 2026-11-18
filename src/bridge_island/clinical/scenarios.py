@@ -83,7 +83,10 @@ def _fault(raw: Any, where: str) -> Fault:
         tuple(sorted((k, raw[k]) for k in OPTIONS if k in raw)),
     )
     try:
-        fault.resolve(tuple())  # a clock time resolves at once; a meal time is checked below
+        # a clock time resolves at once; a meal time is checked below
+        start = fault.resolve(tuple())
+        if not 0 <= start < 24 * 3600 or int(str(raw["at"]).split(":")[1]) > 59:
+            raise ScenarioError(f"{where}.at: a clock time runs from 00:00 to 23:59")
     except ValueError:
         if not any(str(raw["at"]).startswith(m[0]) for m in MEALS):
             raise ScenarioError(
