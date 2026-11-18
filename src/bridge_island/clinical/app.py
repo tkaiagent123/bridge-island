@@ -27,9 +27,9 @@ import yaml
 import bridge_island
 from bridge_island.clinical import envelope as Env
 from bridge_island.clinical import experiment as X
+from bridge_island.clinical import explain, views
 from bridge_island.clinical import loop as L
 from bridge_island.clinical import scenarios as S
-from bridge_island.clinical import views
 from bridge_island.examples import load_world
 from bridge_island.rules import check_rules
 from bridge_island.scenario import ScenarioError
@@ -38,6 +38,7 @@ from bridge_island.yamlutil import YamlError, load_yaml
 E = html.escape
 
 PAGES = [
+    ("/insulin/tour", "Tour"),
     ("/insulin", "Run a scenario"),
     ("/insulin/scenarios", "Scenario files"),
     ("/insulin/report", "Full report"),
@@ -599,10 +600,12 @@ def get(app: Any, path: str, query: Mapping[str, list[str]]) -> tuple[str, str]:
                 "Insulin loop",
                 "/insulin",
                 '<p class="lede">The Generic Glycemic Loop: an invented controller host, invented sensors, pumps and a phone display, and an invented patient model. '
-                "Run a day with a fault and compare three ways of connecting them. Three steps, then a plain-English result.</p>",
+                "Run a day with a fault and compare three ways of connecting them. New here? Take the <a href='/insulin/tour'>tour</a> first. Three steps, then a plain-English result.</p>",
             )
             + run_form(app, query)
         )
+    if path == "/insulin/tour":
+        return "Tour", _head("Tour: how it works", "/insulin/tour") + explain.tour_page()
     if path == "/insulin/scenarios":
         return "Scenario files", scenarios_page(app)
     if path == "/insulin/report":

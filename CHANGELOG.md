@@ -6,6 +6,12 @@ and the project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- A **Tour** page in the Insulin loop tab for first-time readers: the architecture, the data flow (play all six messages or step through one) and five faults (a red dashed line and a cross show where messages stop), drawn as inline SVG with CSS animation only (no script; honours reduced motion).
+
+### Fixed
+- `bridge-island describe` now lists output-only systems such as the sensor.
+
 ### Changed
 - The Insulin loop tab now has the main simulation's features: a three-step run form with quick starts, your own faults, controller host version, hours and seed, and downloads; scenario files; the full report; guidelines G1 to G8; experiments; and a help page. Clock times in insulin-loop scenario files are checked (00:00 to 23:59).
 

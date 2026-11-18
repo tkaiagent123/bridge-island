@@ -371,3 +371,15 @@ def test_app_insulin_tab_has_the_main_simulations_features() -> None:
     assert (
         "attachment" in doc.headers["Content-Disposition"] and b"Generic Glycemic Loop" in doc.body
     )
+
+
+def test_app_tour_page_draws_the_architecture_flow_and_faults() -> None:
+    app, host = _app()
+    page = app.handle("GET", "/insulin/tour", host).body.decode()
+    assert page.count("<svg") == 3 and "<script" not in page and "http" not in page.split("<h1>")[1]
+    assert page.count('type="radio"') == 7 + 6  # play all + 6 steps, no fault + 5 faults
+    assert "prefers-reduced-motion" in page and "The Bridge itself stalls" in page
+    assert (
+        "scenario=bridge_stall" in page
+        and "tour</a>" in app.handle("GET", "/insulin", host).body.decode()
+    )

@@ -113,6 +113,7 @@ max-complexity = 15
 "src/bridge_island/clinical/svg.py" = ["E501"]
 "src/bridge_island/clinical/figures.py" = ["E501"]
 "src/bridge_island/clinical/app.py" = ["E501"]
+"src/bridge_island/clinical/explain.py" = ["E501"]
 "src/bridge_island/clinical/cli.py" = ["E501"]
 "src/bridge_island/clinical/experiment.py" = ["E501"]
 "src/bridge_island/clinical/docs_tables.py" = ["E501"]
