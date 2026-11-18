@@ -77,6 +77,7 @@ synthetic and illustrative: it is not medical software and not for clinical use.
 
 The tab has the same pages as the main simulation, each on the insulin loop:
 
+* **Tour.** Start here if the system is new to you. Three pictures of the architecture: the three islands, the data flow (play all six messages or pick one) and the faults (pick one and see where messages stop). Each fault links to a run of it.
 * **Run a scenario.** Three steps. Choose one virtual patient or all 30, the controller host version
   and the architectures to compare; pick a quick start and optionally add up to two faults of your
   own (a kind, a start time such as `08:00` or `lunch+15`, and a length); set the hours and seed. The
