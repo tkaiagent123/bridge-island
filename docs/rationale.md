@@ -25,7 +25,9 @@ it. A stall, a crash or a wrong mapping affects every unique system at once. The
 monitor detects a stall after the fact, as the timing experiment shows, but detection is
 not tolerance. This repository contains no redundancy, failover or fault-tree analysis of
 the Bridge. Anyone applying the pattern to a real system needs those, and a safety case for
-the Bridge itself.
+the Bridge itself. The U.S. Air Force A-GRA
+places the closest standardized counterpart at a safety boundary and assumes it contains a message
+validator; see [related work](related-work.md#open-mission-system-standards-us-air-force).
 
 **The numbers are synthetic.** All platforms, interfaces and rates are invented. The latency
 budgets, bus latencies and signal functions are arbitrary choices that make the behavior
