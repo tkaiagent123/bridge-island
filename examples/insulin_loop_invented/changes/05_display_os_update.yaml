@@ -1,0 +1,9 @@
+# A declared change (invented). Synthetic, illustrative.
+name: display os update
+description: 'The phone''s operating system tightens background limits: the display app may now be held
+  back up to 5 minutes.'
+side: unique
+device: CompanionDisplay
+simulate: default
+declares:
+  display_latency_s: 300

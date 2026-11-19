@@ -84,7 +84,7 @@ def describe(world: ModuleType, version: int) -> dict[str, Any]:
                 ],
                 "outputs": [o.message_name for o in dic.outputs.get(name, ())],
             }
-            for name, needs in dic.needs.items()
+            for name, needs in {**{n: () for n in dic.outputs}, **dic.needs}.items()
         ],
         "paths": paths,
         "uplinks": [
@@ -97,7 +97,7 @@ def describe(world: ModuleType, version: int) -> dict[str, Any]:
         ],
         "counts": {
             "published_elements": sum(len(m.elements) for m in dic.interface.published),
-            "subsystems": len(dic.needs),
+            "subsystems": len({**dic.outputs, **dic.needs}),
             "paths": len(paths),
             "identity": sum(1 for p in paths if p["kind"] == "identity"),
             "converted": sum(1 for p in paths if p["kind"] == "converted"),

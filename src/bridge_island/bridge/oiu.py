@@ -26,12 +26,14 @@ class OemInterfaceUnit:
         sched: Scheduler,
         log: EventLog,
         on_message: Callable[[Message], None],
+        on_handover: Callable[[Message], Message] | None = None,
     ) -> None:
         self.name = name
         self.interface = interface
         self.sched = sched
         self.log = log
         self.on_message = on_message
+        self.on_handover = on_handover  # a last look at a message as the baseline takes it
         self.rt = RemoteTerminal(name)
         self.rejected_in = 0
         self.rejected_out = 0
@@ -58,7 +60,14 @@ class OemInterfaceUnit:
 
     def _transmitter(self, spec: MessageSpec) -> Callable[[], Message | None]:
         queue = self._queues[spec.name]
-        return lambda: queue.popleft() if queue else None
+
+        def transmit() -> Message | None:
+            if not queue:
+                return None
+            msg = queue.popleft()
+            return self.on_handover(msg) if self.on_handover else msg
+
+        return transmit
 
     def submit(self, msg: Message) -> bool:
         """Queue a message for the baseline. Only specified accepted messages get through."""

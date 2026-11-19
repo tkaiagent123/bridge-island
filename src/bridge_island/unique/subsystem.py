@@ -54,6 +54,7 @@ class UniqueSubsystem:
     needs: tuple[Need, ...]
     outputs: tuple[Output, ...] = ()
     bus_latency_s: float | None = None
+    bus_minor_hz: float | None = None  # command/response only: minor-frame rate of its bus
     island: str = field(default="unique", init=False)
     received: list[Received] = field(default_factory=list, init=False)
     late: list[Received] = field(default_factory=list, init=False)

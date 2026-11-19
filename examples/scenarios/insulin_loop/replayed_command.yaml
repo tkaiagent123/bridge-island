@@ -1,0 +1,11 @@
+# Insulin-loop scenario (invented). Synthetic, illustrative; not medical software.
+name: replayed_command
+example: insulin-loop
+description: >-
+  Seven minutes after the lunch bolus is issued (after the next command), that command, with the same id and still inside its valid-until time, is replayed into the pump path.
+duration_h: 24
+seed: 1
+patients: all  # VP01..VP30, or one id such as VP01
+architectures: [direct, bridge-basic, bridge-contract]
+faults:
+  - {kind: replay_command, at: lunch, delay_min: 7}

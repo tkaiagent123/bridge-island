@@ -1,0 +1,11 @@
+# Insulin-loop scenario (invented). Synthetic, illustrative; not medical software.
+name: sensor_dropout
+example: insulin-loop
+description: >-
+  No glucose readings for 45 minutes, starting 15 minutes after lunch.
+duration_h: 24
+seed: 1
+patients: all  # VP01..VP30, or one id such as VP01
+architectures: [direct, bridge-basic, bridge-contract]
+faults:
+  - {kind: sensor_dropout, at: lunch+15, minutes: 45}

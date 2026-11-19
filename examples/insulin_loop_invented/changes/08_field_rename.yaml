@@ -1,0 +1,9 @@
+# A declared change (invented). Synthetic, illustrative.
+name: field rename
+description: A SensorA firmware update renames sample_time to measured_at.
+side: unique
+device: SensorA
+simulate: default
+declares:
+  field_renames:
+    sample_time: measured_at

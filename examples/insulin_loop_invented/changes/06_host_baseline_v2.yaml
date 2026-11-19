@@ -1,0 +1,9 @@
+# A declared change (invented). Synthetic, illustrative.
+name: host baseline v2
+description: The controller host moves to interface v2 (a rename, a unit change, an added and a removed
+  element).
+side: baseline
+device: ControllerHost
+simulate: default
+declares:
+  baseline_version: 2

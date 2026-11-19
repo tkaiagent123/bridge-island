@@ -1,0 +1,51 @@
+# Mapping spec for the invented GGL controller host, baseline interface version 1.
+# Devices: SensorA, SensorB (replaces SensorA during the run), PumpA, CompanionDisplay. Synthetic, illustrative.
+name: ggl_v1_sensor_swap
+baseline_version: 1
+world: world.py
+devices: [SensorA, SensorB, PumpA, CompanionDisplay]
+
+downlinks:
+  # CompanionDisplay: shows the host's own units; names the mode and alarm codes
+  - {from: ControllerStatus.glucose, to: CompanionDisplay.glucose}
+  - from: ControllerStatus.loop_mode
+    to: CompanionDisplay.loop_mode
+    transforms: [{enum: {map: {0: CLOSED_LOOP, 1: FALLBACK, 2: SUSPEND}, to_encoding: enum}}]
+  - from: ControllerStatus.alarm_code
+    to: CompanionDisplay.alarm_code
+    transforms: [{enum: {map: {0: NONE, 1: LOW, 2: URGENT_LOW, 3: NO_GLUCOSE, 4: PUMP_COMM}, to_encoding: enum}}]
+  - {from: ControllerStatus.iob, to: CompanionDisplay.iob}
+
+  # PumpA: already in the host's units; the command id goes last
+  - {from: DoseCommand.basal, to: PumpA.basal}
+  - {from: DoseCommand.bolus, to: PumpA.bolus}
+  - {from: DoseCommand.valid_until, to: PumpA.valid_until}
+  - {from: DoseCommand.command_id, to: PumpA.command_id}
+
+uplinks:
+  - from: SensorA.reading
+    to: GlucoseReading
+    fields:
+      - {from: glucose, to: glucose, transforms: [{valid_range: [40, 400]}]}
+      - {from: status, to: sensor_status}
+      - {from: sample_time, to: source_time}
+  - from: SensorB.reading
+    to: GlucoseReading
+    fields:
+      - {from: glucose, to: glucose, transforms: [{unit: [mmol/L, mg/dL]}, {valid_range: [40, 400]}]}
+      - from: status
+        to: sensor_status
+        transforms: [{enum: {map: {OK: 0, LOW: 1, HIGH: 2, ERR: 3}, to_encoding: uint8}}]
+      - {from: sample_time, to: source_time}
+  - from: PumpA.confirm
+    to: DeliveryConfirmation
+    fields:
+      - {from: command_id, to: command_id}
+      - {from: delivered, to: delivered}
+      - {from: status, to: pump_status}
+      - {from: reservoir, to: reservoir}
+      - {from: battery, to: battery}
+  - from: CompanionDisplay.ack
+    to: AlarmAck
+    fields:
+      - {from: alarm_id, to: alarm_id, transforms: [{valid_range: [0, 1000000]}]}

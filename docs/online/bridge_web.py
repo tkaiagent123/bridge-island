@@ -9,6 +9,7 @@ import base64
 from bridge_island.ui import App
 
 _app = App(0)
+_app.browser = True  # no worker processes in the browser: cohort runs are desktop only
 _HOST = {"Host": "127.0.0.1:0"}
 
 

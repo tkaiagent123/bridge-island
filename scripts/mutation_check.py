@@ -67,7 +67,20 @@ TARGETS: dict[str, list[str]] = {
     "age.py": ["tests/test_age.py", "tests/test_age_tolerance.py"],
     "analysis/change_impact.py": ["tests/test_analysis.py"],
     "scenario.py": ["tests/test_ui.py"],
+    # the insulin loop
+    "bridge/contract.py": ["tests/test_contract.py", "tests/test_contract_properties.py"],
+    "clinical/physiology.py": ["tests/test_insulin_physiology.py"],
+    "clinical/controller.py": ["tests/test_insulin_loop.py"],
+    "clinical/devices.py": ["tests/test_insulin_loop.py"],
+    "clinical/loop.py": ["tests/test_insulin_loop.py"],
+    "clinical/metrics.py": ["tests/test_insulin_loop.py"],
+    "clinical/guidelines.py": ["tests/test_insulin_loop.py"],
+    "clinical/scenarios.py": ["tests/test_insulin_loop.py"],
+    "clinical/envelope.py": ["tests/test_insulin_surfaces.py"],
 }
+INSULIN = [t for t in TARGETS if t.startswith("clinical/") or t == "bridge/contract.py"]
+for _t in INSULIN:
+    TARGETS[_t] += ["tests/test_insulin_golden.py", "tests/test_insulin_edges.py"]
 
 for _tests in TARGETS.values():
     if "tests/test_mutation_gaps.py" not in _tests:
@@ -204,7 +217,9 @@ def run_tests(workdir: Path, tests: list[str], timeout: int) -> str:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument(
-        "--target", action="append", help="limit to these files (relative to the package)"
+        "--target",
+        action="append",
+        help="limit to these files (relative to the package), or 'insulin' for the insulin loop",
     )
     ap.add_argument("--sample", type=int, default=300, help="how many mutants in total")
     ap.add_argument("--seed", type=int, default=1)
@@ -214,7 +229,8 @@ def main() -> int:
         "--only", type=Path, help="re-run only the survivors recorded in this JSON file"
     )
     args = ap.parse_args()
-    targets = {t: TARGETS[t] for t in (args.target or TARGETS)}
+    chosen = INSULIN if args.target == ["insulin"] else (args.target or TARGETS)
+    targets = {t: TARGETS[t] for t in chosen}
 
     rng = random.Random(args.seed)
     plan: list[tuple[str, int]] = []

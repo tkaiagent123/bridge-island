@@ -71,7 +71,9 @@ source = ["bridge_island"]
 branch = true
 
 [tool.coverage.report]
-# The 90% target applies to core, bridge and codegen (checked in CI by scripts/check_coverage.py).
+# The 90% target applies to core, bridge (with the contract monitor), codegen and clinical (the
+# insulin loop, including the envelope module). CI checks it with `coverage report --fail-under=90
+# --include=...` in .github/workflows/ci.yml; there is no separate coverage script.
 show_missing = true
 
 [tool.ruff]
@@ -105,6 +107,17 @@ max-complexity = 15
 "src/bridge_island/scenario.py" = ["E501"]
 "src/bridge_island/summary.py" = ["E501"]
 "src/bridge_island/ui.py" = ["E501"]
+"src/bridge_island/clinical/views.py" = ["E501"]
+"src/bridge_island/clinical/story.py" = ["E501"]
+"src/bridge_island/clinical/report.py" = ["E501"]
+"src/bridge_island/clinical/svg.py" = ["E501"]
+"src/bridge_island/clinical/figures.py" = ["E501"]
+"src/bridge_island/clinical/app.py" = ["E501"]
+"src/bridge_island/clinical/explain.py" = ["E501"]
+"src/bridge_island/clinical/cli.py" = ["E501"]
+"src/bridge_island/clinical/experiment.py" = ["E501"]
+"src/bridge_island/clinical/docs_tables.py" = ["E501"]
+"src/bridge_island/clinical/traceability.py" = ["E501"]
 
 [tool.mypy]
 python_version = "3.10"

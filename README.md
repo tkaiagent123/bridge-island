@@ -78,9 +78,15 @@ scenarios, experiments, limitations, related work, API).
 
 ## Status
 
-Alpha. Two invented examples (aviation, medical), each with a baseline interface v1 and v2;
-five reproducible experiments; scenario files; tests for the six design guidelines G1-G6. See the
-[CHANGELOG](CHANGELOG.md). Not flight or medical software; not certified.
+Alpha. Three invented examples:
+
+* aviation and medical, each with a baseline interface v1 and v2;
+* a closed-loop insulin example (`insulin-loop`) with a contract monitor, ten scenarios, a virtual
+  cohort and a traceability matrix.
+
+Seven reproducible experiments, scenario files, and tests for the design guidelines G1-G6 (G7 and G8
+for the insulin loop). See the [CHANGELOG](CHANGELOG.md). Not flight or medical software; not
+certified; not for clinical use.
 
 ## Community
 

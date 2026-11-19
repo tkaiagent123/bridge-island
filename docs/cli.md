@@ -7,14 +7,16 @@ content is invented and all numbers are synthetic, illustrative. Run `bridge-isl
 | Command | What it does |
 | --- | --- |
 | `list` | Lists the examples, their baseline versions and subsystems, and the shipped scenarios. |
-| `demo EXAMPLE` | Runs an example on both baseline versions, then compares what the change costs with point to point. |
+| `demo EXAMPLE` | Runs an example on both baseline versions, then compares what the change costs with point to point. `demo insulin-loop --story [--patient VPnn] [--json]` tells the closed-loop example as five steps, with the counts at each step. |
 | `describe EXAMPLE` | Shows the baseline interface, the unique systems and every mapped path, as text, Markdown, Mermaid or JSON. |
 | `diff EXAMPLE` | Shows what a baseline version change touches, measured on the real mapping files. |
-| `run SCENARIO.yaml` | Runs one reproducible scenario described in YAML. See [Scenarios](scenarios.md). |
-| `report EXAMPLE` | Writes one self-contained HTML report. |
-| `check-rules` | Runs the checks for guidelines G1 to G6 and prints pass or fail. |
-| `experiment NAME` | Runs one of the five [experiments](experiments.md), writing CSV and plots. `ai-mapping` also takes `--provider`, `--model`, `--trials`, `--repairs`, `--variant`, `--perturbed-n` and `--cassettes`. |
+| `run SCENARIO.yaml` | Runs one reproducible scenario described in YAML. See [Scenarios](scenarios.md). An insulin-loop scenario (`examples/scenarios/insulin_loop/`) runs its patients and architectures and prints a summary (`--json`, `--out DIR`). |
+| `report EXAMPLE` | Writes one self-contained HTML report. `report insulin-loop --scenario NAME [--patient VPnn] [--no-cohort]` writes the insulin-loop report: one scenario, the contract card, the critical event record and the limitations. |
+| `check-rules` | Runs the checks for guidelines G1 to G6 (and G7, G8 for `--example insulin-loop`) and prints pass or fail. |
+| `experiment NAME` | Runs one of the seven [experiments](experiments.md), writing CSV and plots. `closed-loop` and `change-ledger` need `--example insulin-loop`; `closed-loop` also takes `--workers` and `--patients N`. `ai-mapping` also takes `--provider`, `--model`, `--trials`, `--repairs`, `--variant`, `--perturbed-n` and `--cassettes`. |
 | `codegen --spec FILE` | Compiles a YAML mapping spec to a Python module (G5). |
+| `envelope check CHANGE.yaml --example insulin-loop` | Says whether a declared peripheral change is inside the contract's change envelope. Inside, it lists the conformance tests to re-run; outside, it lists the owners who must review it, and why (`--json`). |
+| `envelope verify --example insulin-loop [--change CHANGE.yaml]` | Runs the conformance tests generated from the contract: all of them, or the ones a change needs, on its devices. |
 
 ## A short tour
 

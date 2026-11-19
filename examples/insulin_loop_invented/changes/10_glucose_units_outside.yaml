@@ -1,0 +1,11 @@
+# A declared change (invented). Synthetic, illustrative.
+name: glucose units outside
+description: A sensor that reports glucose in g/L.
+side: unique
+device: SensorB
+simulate: sensor_swap
+declares:
+  glucose_units: g/L
+  sample_period_s: 60
+  sensor_lag_s: 300
+  protocol: pubsub

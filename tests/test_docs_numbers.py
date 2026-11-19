@@ -112,3 +112,16 @@ def test_ai_mapping_control_numbers_in_the_docs() -> None:
                     pct = round(100 * row["value"], 1)
                     got[key] = (pct, rej) if row["metric"] == "correct" else (ok, pct)
     assert got == expected
+
+
+def test_insulin_loop_numbers_in_the_docs() -> None:
+    """Every ggl table in docs/ equals a fresh seeded run (900 simulated days, about a minute)."""
+    from bridge_island.clinical import docs_tables
+
+    tables = docs_tables.render(1)
+    seen = set()
+    for page in sorted(docs_tables.DOCS.glob("*.md")):
+        for name, shown in docs_tables.blocks(page.read_text(encoding="utf-8")).items():
+            assert shown == tables[name], f"{page.name}: block {name} differs from a fresh run"
+            seen.add(name)
+    assert seen == set(tables)

@@ -25,10 +25,11 @@ a second or two. You need [uv](https://docs.astral.sh/uv/) installed once.
 
 ![The first page of the app: quick starts, choices for the example and the Bridge's behaviour, and things that can go wrong](images/app-home.png)
 
-The page across the top has six tabs.
+The page across the top has eight tabs; the Insulin loop tab is described [below](#insulin-loop).
 
 | Tab | What it is for |
 | --- | --- |
+| **Tour** | A picture book for first-time readers: the architecture, the data flow and the faults, drawn and animated. Start here if the system is new to you. Each fault links to a run of it. |
 | **Run a simulation** | Choose an example, how long to run, how the Bridge behaves, and what goes wrong (a stall, a faulty system). The *Quick starts* fill the form with common cases. |
 | **Scenario files** | Run one of the shipped scenarios, or paste your own. A scenario file describes one run completely, so it can be shared and repeated. |
 | **Full report** | One page with everything for an example. Open it here, or download it as a single file that works offline. |
@@ -69,6 +70,40 @@ The page across the top has six tabs.
    of quietly going without it.
 5. Try **A faulty system sends bad messages**. The Bridge blocks the message and the baseline never sees it.
 6. Open **Check the guidelines** and run it on both examples.
+
+## Insulin loop
+
+The **Insulin loop** tab runs the [closed-loop example](insulin-loop.md). Everything in it is
+synthetic and illustrative: it is not medical software and not for clinical use.
+
+The tab has the same pages as the main simulation, each on the insulin loop:
+
+* **Tour.** The same tour drawn for the sensor, pump and phone display, with the insulin loop's own faults. The general version is the **Tour** tab at the top of the app.
+* **Run a scenario.** Three steps. Choose one virtual patient or all 30, the controller host version
+  and the architectures to compare; pick a quick start and optionally add up to two faults of your
+  own (a kind, a start time such as `08:00` or `lunch+15`, and a length); set the hours and seed. The
+  result has:
+    * a plain-English explanation and one sentence per architecture, each with its counts;
+    * headline tiles;
+    * the glucose chart, with the 70-180 band, the 70 and 54 lines, the fault time and fail-safe
+      periods shaded;
+    * an insulin delivery strip;
+    * an event timeline that separates "told" (the controller or display was told) from "logged";
+    * downloads: the numbers (JSON), glucose every minute (CSV), these settings as a scenario file
+      and a reproducibility record.
+* **Scenario files.** Run a shipped file or paste your own; the same files run with `bridge-island run`.
+* **Full report.** The offline report for a scenario, opened here or downloaded as one file.
+* **Guidelines.** Tests G1 to G8 on the loop and says pass or fail for each.
+* **Experiments.** `closed-loop` and `change-ledger`, with tables, figures and CSV downloads.
+* **Contract card.** The contract's eight parts. Each claim is linked to its test and shows pass or
+  fail from the last conformance run.
+* **Change ledger.** Pick a declared change and see whether it is inside or outside the envelope, the
+  tests to re-run and the organizations to involve.
+* **Help.** What the loop is, how to read the charts, the fault kinds, the scenario file format and the words used.
+
+The three architectures always use the same colours, the same as in the figures. They also differ
+by line style, so colour is never the only clue. In the in-browser version a single patient runs
+in your browser; all 30 patients, the 30-patient table in the report and experiments of more than two patients are desktop only.
 
 ## Is it safe?
 

@@ -340,7 +340,16 @@ def dictionary_for_spec(spec_path: Path) -> Dictionary:
     version = spec["baseline_version"]
     if isinstance(version, bool) or not isinstance(version, int):
         raise CodegenError(f"baseline_version must be an integer, got {version!r}")
-    dic = load_module(world_file).dictionary(version)
+    devices = spec.get("devices")  # optional: a world with several device configurations
+    if devices is not None and (
+        not isinstance(devices, list) or not all(isinstance(d, str) for d in devices)
+    ):
+        raise CodegenError(f"devices must be a list of names, got {devices!r}")
+    world = load_module(world_file)
+    try:
+        dic = world.dictionary(version) if devices is None else world.dictionary(version, devices)
+    except ValueError as exc:
+        raise CodegenError(f"{world_file.name}: {exc}") from exc
     if not isinstance(dic, Dictionary):
         raise CodegenError(f"{world_file.name}: dictionary({version}) did not return a Dictionary")
     return dic

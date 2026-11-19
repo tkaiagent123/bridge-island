@@ -102,6 +102,7 @@ class ScaleOffset(Transform):
     scale: float
     offset: float = 0.0
     to_units: str | None = None
+    to_encoding: str | None = None
 
     def apply(self, value: float) -> float:
         return value * self.scale + self.offset
@@ -115,7 +116,8 @@ class ScaleOffset(Transform):
         return ScaleOffset(1.0 / self.scale, -self.offset / self.scale)
 
     def output(self, rep: Representation) -> Representation:
-        return replace(rep, units=self.to_units) if self.to_units else rep
+        rep = replace(rep, units=self.to_units) if self.to_units else rep
+        return replace(rep, encoding=self.to_encoding) if self.to_encoding else rep
 
 
 @dataclass(frozen=True)
@@ -274,6 +276,31 @@ class BitPack(Transform):
 
 
 @dataclass(frozen=True)
+class Quantize(Transform):
+    """Round to a whole number of steps, giving an integer (for example insulin to pump pulses).
+
+    ``units`` and ``scale`` say what one step is worth: ``value * scale`` rounded to the nearest
+    integer, carried as ``encoding`` in ``units``. Rounding loses at most half a step.
+    """
+
+    scale: float
+    encoding: str
+    units: str
+
+    def apply(self, value: float) -> int:
+        return round(value * self.scale)
+
+    def expr(self, x: str) -> str:
+        return f"round({x} * {self.scale!r})"
+
+    def inverse(self) -> Transform:
+        return ScaleOffset(1.0 / self.scale)
+
+    def output(self, rep: Representation) -> Representation:
+        return replace(rep, encoding=self.encoding, units=self.units)
+
+
+@dataclass(frozen=True)
 class ValidityCheck(Transform):
     lo: float
     hi: float
@@ -342,16 +369,21 @@ def _build_scale_offset(arg: Any) -> Transform:
     if (
         not isinstance(arg, dict)
         or "scale" not in arg
-        or set(arg) - {"scale", "offset", "to_units"}
+        or set(arg) - {"scale", "offset", "to_units", "to_encoding"}
     ):
         raise TransformError(
-            f"scale_offset needs 'scale' (and optionally 'offset', 'to_units'): {arg!r}"
+            "scale_offset needs 'scale' (and optionally 'offset', 'to_units', 'to_encoding'): "
+            f"{arg!r}"
         )
-    to_units = arg.get("to_units")
-    if to_units is not None and not isinstance(to_units, str):
-        raise TransformError(f"to_units must be text, got {to_units!r}")
+    to_units, to_encoding = arg.get("to_units"), arg.get("to_encoding")
+    for name, value in (("to_units", to_units), ("to_encoding", to_encoding)):
+        if value is not None and not isinstance(value, str):
+            raise TransformError(f"{name} must be text, got {value!r}")
     return ScaleOffset(
-        _finite(arg["scale"], "scale"), _finite(arg.get("offset", 0.0), "offset"), to_units
+        _finite(arg["scale"], "scale"),
+        _finite(arg.get("offset", 0.0), "offset"),
+        to_units,
+        to_encoding,
     )
 
 
@@ -395,6 +427,18 @@ def _build_fields(arg: Any) -> tuple[tuple[str, int], ...]:
     return tuple(fields)
 
 
+def _build_quantize(arg: Any) -> Transform:
+    if not isinstance(arg, dict) or set(arg) != {"scale", "encoding", "units"}:
+        raise TransformError(f"quantize needs 'scale', 'encoding' and 'units': {arg!r}")
+    scale = _finite(arg["scale"], "scale")
+    if scale <= 0:
+        raise TransformError(f"quantize scale must be positive, got {scale}")
+    enc, unit = arg["encoding"], arg["units"]
+    if not isinstance(enc, str) or not enc.startswith(("uint", "int")) or not isinstance(unit, str):
+        raise TransformError(f"quantize gives an integer encoding and a unit name: {arg!r}")
+    return Quantize(scale, enc, unit)
+
+
 def _build_valid_range(arg: Any) -> Transform:
     lo, hi = _pair(arg, "valid_range")
     lo, hi = _finite(lo, "the lower limit"), _finite(hi, "the upper limit")
@@ -412,6 +456,7 @@ _BUILDERS: dict[str, Callable[[Any], Transform]] = {
     "bit_unpack": lambda arg: BitUnpack(_build_fields(arg)),
     "bit_pack": lambda arg: BitPack(_build_fields(arg)),
     "valid_range": _build_valid_range,
+    "quantize": _build_quantize,
 }
 
 

@@ -1,0 +1,11 @@
+# Insulin-loop scenario (invented). Synthetic, illustrative; not medical software.
+name: sensor_swap_units
+example: insulin-loop
+description: >-
+  SensorA is replaced by SensorB (mmol/L, every minute, another maker) at 08:00. The direct adapter is not updated (integration lag); the Bridge's mapping is updated through the change envelope.
+duration_h: 24
+seed: 1
+patients: all  # VP01..VP30, or one id such as VP01
+architectures: [direct, bridge-basic, bridge-contract]
+faults:
+  - {kind: sensor_swap, at: "08:00"}

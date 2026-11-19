@@ -161,3 +161,84 @@ def summarize(rows: list[dict[str, float]], key: str) -> dict[str, float]:
         return values[min(len(values) - 1, int(p * len(values)))]
 
     return {"mean": sum(values) / len(values), "p5": pct(0.05), "p50": pct(0.5), "p95": pct(0.95)}
+
+
+# --- peripheral changes in the insulin loop (the change ledger) --------------------------------
+#
+# Counting model for one declared change and one architecture (stated assumptions, not data):
+#   * A change on the Unique side always changes the device's own code (count 1). A change on the
+#     Baseline side changes the controller host's code.
+#   * Changes that alter what a value means (units, field names, encoding, resolution, protocol,
+#     new crossing data, a new host interface) also need integration code: in ``direct`` that is
+#     the host's adapter for the port (the adapters live in the host, the default) or the device's
+#     own adapter (the sensitivity case); in the Bridge architectures it is the mapping.
+#   * Timing-only changes (period, lag, display latency) need no code, but whatever holds the
+#     integration is re-verified.
+#   * Re-verification covers every component with a code change, plus the integration holder.
+#   * Sign-off comes from each owner of a re-verified component. ``bridge-basic`` has no envelope,
+#     so nothing shows the host is unaffected by a value change: the host owner also signs.
+#     ``bridge-contract`` involves exactly the owners the envelope check names.
+#   * Tests to re-run: every conformance test, except inside the envelope, where only the listed
+#     ones run. The suite size stands in for "the integration's tests" in every architecture.
+
+VALUE_DECLARATIONS = frozenset(
+    {
+        "glucose_units",
+        "field_renames",
+        "bolus_resolution_u",
+        "protocol",
+        "new_crossing_fields",
+        "baseline_version",
+    }
+)
+
+
+@dataclass(frozen=True)
+class LedgerRow:
+    components_code_change: int
+    components_reverified: int
+    organizations: int
+    inside_envelope: bool | None  # None: the architecture has no envelope
+    tests_to_rerun: int
+    host_touched: bool
+
+
+def ledger_row(
+    arch: str,
+    side: str,
+    declares: frozenset[str],
+    device_owner: str,
+    host_owner: str,
+    integrator: str,
+    envelope_owners: tuple[str, ...],
+    inside: bool,
+    listed_tests: int,
+    suite_size: int,
+    adapters_in_host: bool = True,
+) -> LedgerRow:
+    value = bool(declares & VALUE_DECLARATIONS)
+    changed = {host_owner if side == "baseline" else device_owner + ":device"}
+    if arch == "direct":
+        holder = "host" if adapters_in_host else device_owner + ":device"
+    else:
+        holder = "bridge"
+    code = set(changed) | ({holder} if value else set())
+    reverify = code | {holder}
+    owner = {"host": host_owner, "bridge": integrator}
+    orgs = {owner.get(c, c.split(":")[0]) for c in reverify}
+    if side == "baseline":
+        orgs.add(host_owner)
+    if arch == "bridge-basic" and value:
+        orgs.add(host_owner)
+    if arch == "bridge-contract":
+        orgs = set(envelope_owners)
+    host_touched = side == "baseline" or "host" in reverify  # host code changed or re-verified
+    tests = listed_tests if arch == "bridge-contract" and inside else suite_size
+    return LedgerRow(
+        len(code),
+        len(reverify),
+        len(orgs),
+        inside if arch == "bridge-contract" else None,
+        tests,
+        host_touched,
+    )

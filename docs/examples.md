@@ -88,3 +88,22 @@ the aviation example: the mapping absorbs the changes, and the removal is report
 !!! note
     This example is a structural illustration. It makes no clinical claim, models no real
     device, and is not medical software. No real product or company is represented.
+
+## Insulin loop: Generic Glycemic Loop (GGL)
+
+An invented closed loop:
+
+* an already-cleared dosing controller host (Baseline Island);
+* two glucose sensors, two pump firmware versions and a phone-like display, all from invented makers
+  (Unique Island);
+* an invented patient model outside both islands.
+
+It runs for simulated days instead of seconds, with its own scenario format and three architectures.
+Its page is [Insulin loop](insulin-loop.md), and its traceability matrix is
+[here](insulin-loop-traceability.md). Synthetic, illustrative; not medical software.
+
+```powershell
+uv run bridge-island demo insulin-loop --story
+uv run bridge-island check-rules --example insulin-loop
+uv run bridge-island run examples/scenarios/insulin_loop/stale_burst.yaml
+```

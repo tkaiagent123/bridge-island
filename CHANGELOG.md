@@ -7,6 +7,31 @@ and the project follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- A **Tour** tab for first-time readers: the architecture, the data flow (play all six messages or step through one) and the faults (a red dashed line and a cross show where messages stop, a red dot is a message that cannot be trusted), drawn as inline SVG with CSS animation only (no script; honours reduced motion). Each fault links to a run of it. The Insulin loop tab has the same tour drawn for its own devices.
+
+- The in-browser page counts visits anonymously with GoatCounter (no cookies, nothing you enter), and says so.
+
+### Fixed
+- `bridge-island describe` now lists output-only systems such as the sensor.
+
+### Changed
+- The Insulin loop tab now has the main simulation's features: a three-step run form with quick starts, your own faults, controller host version, hours and seed, and downloads; scenario files; the full report; guidelines G1 to G8; experiments; and a help page. Clock times in insulin-loop scenario files are checked (00:00 to 23:59).
+
+## [0.2.0] - 2026-11-15
+
+### Added
+- The insulin-loop example (Generic Glycemic Loop), synthetic and illustrative, not medical software. It has:
+  - an invented controller host, sensors, pumps and a phone display;
+  - an invented Bergman-structure patient model with a 30-patient virtual cohort;
+  - a declarative interface contract checked at run time by a new, optional contract-monitor partition of the Bridge;
+  - ten scenario files, and three architectures (`direct`, `bridge-basic`, `bridge-contract`);
+  - guidelines G7 (clinical fail-safe first) and G8 (degradation is visible), for this example only.
+- Two experiments: `closed-loop` (10 scenarios x 3 architectures x 30 virtual patients) and `change-ledger` (10 declared changes, with a stated counting model and a sensitivity table).
+- `bridge-island envelope check|verify`: a change envelope, and a conformance suite generated from the contract.
+- `demo insulin-loop --story`; `report insulin-loop --scenario NAME`; an Insulin loop tab in the app, with a run view, a contract card and a change ledger.
+- A requirements traceability matrix (`docs/insulin-loop-traceability.md`), tested so that every cited test exists and passes.
+- Units for glucose (mg/dL, mmol/L) and insulin (U, U/h, mU/min); a `quantize` transform; an optional `to_encoding` on `scale_offset`; a `devices:` key in mapping specs.
+- Options for slow systems: a bus frame rate on the platform and command/response ports, and a health-scan period on the Bridge. Every default is unchanged.
 - A fifth experiment, `bridge-island experiment ai-mapping`: can a model propose the Bridge's mapping for a new baseline version, do the contract checks catch the bad proposals, and how often does a wrong one get through every check marked as confident? Controls (`oracle`, `carry_forward`, a non-AI `heuristic`), three variants (`plain`, `obfuscated`, `perturbed`), replay by default, cassettes for live runs, and an optional `ai` extra for the provider packages.
 
 ### Documentation

@@ -72,6 +72,29 @@ conforms to any standard listed here.
   <https://www.opengroup.org/face>. It separates how data is moved from how it is represented, as
   this project separates the native-protocol ports from the Translator Module.
 
+### Used by the insulin-loop example
+
+None of these documents endorses anything here, and the example claims no compliance with any of
+them.
+
+* **The minimal model.** R. N. Bergman, Y. Z. Ider, C. R. Bowden and C. Cobelli, "Quantitative
+  estimation of insulin sensitivity," *Am J Physiol* 236(6): E667-E677, 1979.
+  doi:10.1152/ajpendo.1979.236.6.E667. The structure of the [invented patient model](insulin-loop.md#the-patient-model).
+* **Time in range.** T. Battelino et al., "Clinical Targets for Continuous Glucose Monitoring Data
+  Interpretation: Recommendations From the International Consensus on Time in Range," *Diabetes Care*,
+  2019. PMID 31177185. The source of the 70-180, below 70, below 54, above 180 and above 250 mg/dL
+  thresholds used in the results.
+* **Medical application platforms.** J. Hatcliff, A. King, I. Lee, A. MacDonald, A. Fernando,
+  M. Robkin, E. Vasserman, S. Weininger and J. M. Goldman, "Rationale and Architecture Principles for
+  Medical Application Platforms," in *Proc. ACM/IEEE ICCPS*, 2012. doi:10.1109/ICCPS.2012.9. It argues
+  for a platform that mediates between independently made devices and the apps that use them. That is
+  the role the Bridge plays here.
+* **Regulation** (cited by title, for the [traceability matrix](insulin-loop-traceability.md)):
+    * 21 CFR 862.1356, *Interoperable automated glycemic controller*;
+    * FDA, *Multiple Function Device Products: Policy and Considerations* (July 2020);
+    * FDA, *Predetermined Change Control Plans for Medical Devices* (draft guidance, August 22, 2024);
+    * IEC 80001-1:2021, on the application of risk management to IT networks that incorporate medical
+      devices.
 ## Open mission-system standards (U.S. Air Force)
 
 The U.S. Air Force publishes unclassified mission-system standards at <https://open-arsenal.gitlab.io/>,

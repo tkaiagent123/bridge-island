@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 300" width="340" height="300" role="img" aria-labelledby="t d"><title id="t">Generic Glycemic Loop architecture (synthetic, illustrative)</title><desc id="d">The controller host (Baseline Island) connects only to the Bridge. The Bridge holds the OIU, Translator Module, UID, health and cyber monitors and the contract monitor. The Unique Island holds SensorA, SensorB, PumpA, PumpB v2 and the CompanionDisplay. The patient model, outside both islands, is sampled by the sensors and driven by the pumps.</desc>
+<rect width="340" height="300" fill="#ffffff"/>
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#444"/></marker></defs>
+<rect x="10" y="10" width="320" height="40" rx="6" fill="#E8E8E8" stroke="#444" stroke-width="1"/>
+<text x="170" y="27" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#111">Baseline Island: Controller Host (immutable)</text>
+<text x="170" y="41" text-anchor="middle" font-size="8" font-family="sans-serif" fill="#111">accepts GlucoseReading, DeliveryConfirmation, AlarmAck; publishes DoseCommand, ControllerStatus</text>
+<rect x="10" y="70" width="320" height="86" rx="6" fill="#DCEBF5" stroke="#444" stroke-width="1"/>
+<text x="170" y="86" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#111">Bridge</text>
+<rect x="22" y="94" width="88" height="22" rx="6" fill="#ffffff" stroke="#444" stroke-width="1"/>
+<text x="66" y="109" text-anchor="middle" font-size="8" font-family="sans-serif" fill="#111">OIU</text>
+<rect x="126" y="94" width="88" height="22" rx="6" fill="#ffffff" stroke="#444" stroke-width="1"/>
+<text x="170" y="109" text-anchor="middle" font-size="8" font-family="sans-serif" fill="#111">Translator</text>
+<rect x="230" y="94" width="88" height="22" rx="6" fill="#ffffff" stroke="#444" stroke-width="1"/>
+<text x="274" y="109" text-anchor="middle" font-size="8" font-family="sans-serif" fill="#111">UID</text>
+<rect x="22" y="124" width="88" height="22" rx="6" fill="#ffffff" stroke="#444" stroke-width="1"/>
+<text x="66" y="139" text-anchor="middle" font-size="8" font-family="sans-serif" fill="#111">health</text>
+<rect x="126" y="124" width="88" height="22" rx="6" fill="#ffffff" stroke="#444" stroke-width="1"/>
+<text x="170" y="139" text-anchor="middle" font-size="8" font-family="sans-serif" fill="#111">cyber</text>
+<rect x="230" y="124" width="88" height="22" rx="6" fill="#CDEBDD" stroke="#444" stroke-width="1"/>
+<text x="274" y="139" text-anchor="middle" font-size="8" font-family="sans-serif" fill="#111">contract monitor</text>
+<rect x="10" y="176" width="320" height="56" rx="6" fill="#F6E8DA" stroke="#444" stroke-width="1"/>
+<text x="170" y="191" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#111">Unique Island (independently owned)</text>
+<rect x="16" y="200" width="58" height="22" rx="6" fill="#ffffff" stroke="#444" stroke-width="1"/>
+<text x="45" y="215" text-anchor="middle" font-size="7.5" font-family="sans-serif" fill="#111">SensorA</text>
+<rect x="79" y="200" width="58" height="22" rx="6" fill="#ffffff" stroke="#444" stroke-width="1"/>
+<text x="108" y="215" text-anchor="middle" font-size="7.5" font-family="sans-serif" fill="#111">SensorB</text>
+<rect x="142" y="200" width="58" height="22" rx="6" fill="#ffffff" stroke="#444" stroke-width="1"/>
+<text x="171" y="215" text-anchor="middle" font-size="7.5" font-family="sans-serif" fill="#111">PumpA</text>
+<rect x="205" y="200" width="58" height="22" rx="6" fill="#ffffff" stroke="#444" stroke-width="1"/>
+<text x="234" y="215" text-anchor="middle" font-size="7.5" font-family="sans-serif" fill="#111">PumpB v2</text>
+<rect x="268" y="200" width="58" height="22" rx="6" fill="#ffffff" stroke="#444" stroke-width="1"/>
+<text x="297" y="215" text-anchor="middle" font-size="7.5" font-family="sans-serif" fill="#111">Display</text>
+<rect x="60" y="252" width="220" height="36" rx="6" fill="#F2F2F2" stroke="#444" stroke-width="1"/>
+<text x="170" y="268" text-anchor="middle" font-size="9" font-family="sans-serif" fill="#111">Environment: invented patient model</text>
+<text x="170" y="281" text-anchor="middle" font-size="7.5" font-family="sans-serif" fill="#111">sampled by the sensors, driven by the pumps</text>
+<line x1="170" y1="50" x2="170" y2="68" stroke="#444" marker-end="url(#a)"/>
+<line x1="160" y1="68" x2="160" y2="52" stroke="#444" marker-end="url(#a)"/>
+<line x1="170" y1="156" x2="170" y2="174" stroke="#444" marker-end="url(#a)"/>
+<line x1="160" y1="174" x2="160" y2="158" stroke="#444" marker-end="url(#a)"/>
+<line x1="76" y1="250" x2="76" y2="224" stroke="#444" stroke-dasharray="3 2" marker-end="url(#a)"/>
+<line x1="234" y1="224" x2="234" y2="250" stroke="#444" stroke-dasharray="3 2" marker-end="url(#a)"/>
+<text x="300" y="296" text-anchor="middle" font-size="7" font-family="sans-serif" fill="#111">synthetic, illustrative</text>
+</svg>
