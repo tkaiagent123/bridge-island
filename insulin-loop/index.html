@@ -1,0 +1,1705 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Reference implementation of the bridge/island integration architecture (invented platforms).">
+      
+      
+      
+      
+        <link rel="prev" href="../experiments/">
+      
+      
+        <link rel="next" href="../insulin-loop-traceability/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+    
+    
+      
+        <title>The example - bridge-island</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.57a0d79d.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#insulin-loop-the-generic-glycemic-loop" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="bridge-island" class="md-header__button md-logo" aria-label="bridge-island" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            bridge-island
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              The example
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/tkaiagent123/bridge-island" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="bridge-island" class="md-nav__button md-logo" aria-label="bridge-island" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    bridge-island
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/tkaiagent123/bridge-island" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../try-online/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Try it in your browser
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concepts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../app/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using the app
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tutorial/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tutorial
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command-line reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scenarios/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scenarios
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../experiments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Experiments
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Insulin loop
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Insulin loop
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The example
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The example
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-it-is-and-why-it-exists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What it is, and why it exists
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-islands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The islands
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-patient-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The patient model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-controller-and-why-it-is-not-a-real-algorithm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The controller, and why it is not a real algorithm
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-contract-g7-and-g8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The contract, G7 and G8
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-scenarios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The scenarios
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Results
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-costs-and-the-single-point-of-failure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The costs, and the single point of failure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limitations-and-threats-to-validity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limitations and threats to validity
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../insulin-loop-traceability/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Requirements traceability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dev/insulin-loop-design/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Design note
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rationale/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Design rationale and limitations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../related-work/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Related work
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../AI_USAGE/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI usage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-it-is-and-why-it-exists" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What it is, and why it exists
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-islands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The islands
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-patient-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The patient model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-controller-and-why-it-is-not-a-real-algorithm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The controller, and why it is not a real algorithm
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-contract-g7-and-g8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The contract, G7 and G8
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-scenarios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The scenarios
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Results
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-costs-and-the-single-point-of-failure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The costs, and the single point of failure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limitations-and-threats-to-validity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limitations and threats to validity
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="insulin-loop-the-generic-glycemic-loop">Insulin loop: the Generic Glycemic Loop<a class="headerlink" href="#insulin-loop-the-generic-glycemic-loop" title="Permanent link">&para;</a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Synthetic, illustrative</p>
+<p>Everything on this page is invented: the devices, the organizations, the patient model, the
+controller and every number. This is not medical software. It is not a validated patient model
+or dosing algorithm, and it is not for clinical use. Regulatory and standards documents are
+cited by title only, and nothing here claims to comply with them.</p>
+</div>
+<h2 id="what-it-is-and-why-it-exists">What it is, and why it exists<a class="headerlink" href="#what-it-is-and-why-it-exists" title="Permanent link">&para;</a></h2>
+<p>The Generic Glycemic Loop (<code>insulin-loop</code>) carries the bridge/island pattern into an interoperable
+medical setting. An already-cleared dosing controller host cannot be changed by the integrator.
+Sensors, pumps and a phone app come from other makers and change on their own schedules. The example
+asks three questions, and makes each one runnable:</p>
+<ul>
+<li><strong>RQ1:</strong> does the two-authority Bridge structure map onto interoperable-device requirements without
+  contradiction? See the <a href="../insulin-loop-traceability/">traceability matrix</a>.</li>
+<li><strong>RQ2:</strong> across realistic changes, does a Bridge reduce re-verification scope, and at what cost? See
+  the change ledger in <a href="../experiments/#7-change-ledger">Experiments</a>.</li>
+<li><strong>RQ3:</strong> does a runtime contract monitor at the Bridge detect boundary failures that direct
+  integration misses? See the results below.</li>
+</ul>
+<p>The costs of the Bridge are part of the answer: the latency it adds, its own verification burden,
+and the fact that it is a single point of failure.</p>
+<p><img alt="Architecture of the example" src="../images/insulin-loop/fig1_architecture.svg" /></p>
+<h2 id="the-islands">The islands<a class="headerlink" href="#the-islands" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Part</th>
+<th>Role</th>
+<th>Invented details</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Controller Host</td>
+<td>Baseline Island, immutable</td>
+<td>Accepts <code>GlucoseReading</code>, <code>DeliveryConfirmation</code> and <code>AlarmAck</code>. Publishes <code>DoseCommand</code> every 5 minutes and <code>ControllerStatus</code> every minute. Interface v2 renames <code>iob</code>, sends basal in mU/min, adds <code>trend</code> and removes <code>loop_mode</code>.</td>
+</tr>
+<tr>
+<td>SensorA</td>
+<td>Unique Island</td>
+<td>mg/dL every 5 minutes, label words, 7-minute lag</td>
+</tr>
+<tr>
+<td>SensorB</td>
+<td>Unique Island, another maker</td>
+<td>mmol/L every minute, publish/subscribe, 5-minute lag, status as names</td>
+</tr>
+<tr>
+<td>PumpA</td>
+<td>Unique Island</td>
+<td>Basal in U/h, bolus in U, confirms each command, command/response</td>
+</tr>
+<tr>
+<td>PumpB firmware v2</td>
+<td>Unique Island</td>
+<td>Renamed basal field, bolus in integer 0.05 U pulses, <code>reservoir_units</code></td>
+</tr>
+<tr>
+<td>CompanionDisplay</td>
+<td>Unique Island, phone-like</td>
+<td>Shows glucose and alarms and acknowledges alarms. The phone's operating system may hold it back.</td>
+</tr>
+<tr>
+<td>Bridge</td>
+<td>Between the islands</td>
+<td>The OIU, Translator Module, UID, health and cyber monitors, plus the contract monitor</td>
+</tr>
+<tr>
+<td>Patient model</td>
+<td>Environment, outside both islands</td>
+<td>The sensors sample it and the pumps drive it</td>
+</tr>
+</tbody>
+</table>
+<p>Three architectures run on the same patients, meals, seeds and faults:</p>
+<ul>
+<li><strong>direct:</strong> each device has its own adapter on the host, written for the device version it was
+  integrated with. The adapters have the same range and type checks as the Bridge's mapping.</li>
+<li><strong>bridge-basic:</strong> the Bridge, translating only.</li>
+<li><strong>bridge-contract:</strong> the Bridge with the contract monitor on.</li>
+</ul>
+<h2 id="the-patient-model">The patient model<a class="headerlink" href="#the-patient-model" title="Permanent link">&para;</a></h2>
+<p>The structure is the Bergman minimal model (Bergman, Ider, Bowden and Cobelli, 1979). It is extended
+with a plasma-insulin compartment fed through two subcutaneous depots, and a two-compartment meal
+absorption. Time is in minutes:</p>
+<div class="highlight"><pre><span></span><code>dG/dt  = -(p1 + X) G + p1 Gb + Ra(t) / V        glucose, mg/dL
+dX/dt  = -p2 X + p3 (I - Ib)                     remote insulin action, 1/min
+dI/dt  = -n I + U2 / (tau_i VI)                  plasma insulin, uU/mL
+dU1/dt = u(t) - U1 / tau_i                       insulin under the skin, uU
+dU2/dt = (U1 - U2) / tau_i
+dQ1/dt = -Q1 / tau_m + D(t)                      meal glucose, mg
+dQ2/dt = (Q1 - Q2) / tau_m
+Ra(t)  = f Q2 / tau_m
+</code></pre></div>
+<p>The equations are integrated with RK4 at a fixed 1-minute step, which keeps every run repeatable.
+Without the subcutaneous depots, a bolus would act within minutes while a meal appears over hours,
+and no meal bolus could match a meal. The virtual cohort is 30 parameter sets, <code>VP01</code> to <code>VP30</code>,
+drawn from invented ranges and kept only if they settle back to rest.</p>
+<!-- ggl:cohort:start -->
+<p>Seed 1 drew 49 parameter sets and kept 30; 19 did not settle back to their resting glucose within 8 hours and were rejected.</p>
+<!-- ggl:cohort:end -->
+
+<p><strong>Its limits.</strong> The parameter ranges are invented, not drawn from a population. There is no exercise,
+no stress, no circadian change in sensitivity, no counter-regulation and no sensor calibration. The
+model can be swapped behind the <code>PatientModel</code> protocol, so a validated simulator could be plugged in
+without changing the Bridge. No such adapter exists here.</p>
+<h2 id="the-controller-and-why-it-is-not-a-real-algorithm">The controller, and why it is not a real algorithm<a class="headerlink" href="#the-controller-and-why-it-is-not-a-real-algorithm" title="Permanent link">&para;</a></h2>
+<p>The invented controller runs on the host every 5 minutes:</p>
+<ul>
+<li>it suspends basal below 80 mg/dL and gives the programmed basal up to 120 mg/dL;</li>
+<li>above 120 mg/dL it adds a proportional correction, held back by insulin on board;</li>
+<li>it gives a meal bolus for each announced meal;</li>
+<li>without a usable reading for 30 minutes it falls back to the programmed basal, and it raises its own
+  alarms.</li>
+</ul>
+<p>Its settings were tuned once, on the healthy-data day, so that no virtual patient goes below 54 mg/dL.
+That keeps the comparisons about the interface. It is a teaching device, not a dosing method.</p>
+<h2 id="the-contract-g7-and-g8">The contract, G7 and G8<a class="headerlink" href="#the-contract-g7-and-g8" title="Permanent link">&para;</a></h2>
+<p>The contract (<code>examples/insulin_loop_invented/contract.yaml</code>) has eight parts, each enforced and
+tested:</p>
+<ol>
+<li>owner and regulatory home;</li>
+<li>data items;</li>
+<li>timing;</li>
+<li>failure behaviour;</li>
+<li>security;</li>
+<li>claims linked to tests;</li>
+<li>the change envelope;</li>
+<li>the residual.</li>
+</ol>
+<p>The app shows it as a <a href="../app/#insulin-loop">contract card</a>. Two guidelines are added for this example
+only:</p>
+<ul>
+<li><strong>G7, clinical fail-safe first.</strong> Every state in which the Bridge loses valid glucose ends in the
+  contract's fail-safe output:<ul>
+<li>the controller gets a reading flagged FAILSAFE;</li>
+<li>every command carries the patient's programmed basal until valid glucose reaches the
+  controller again.</li>
+</ul>
+</li>
+<li><strong>G8, degradation is visible.</strong> Every fail-safe or alarm state reaches the display, or, if the
+  display never acknowledges it, is logged as undelivered with its age.</li>
+</ul>
+<p>Running the conformance suite found a real gap in the first version of the contract. A burst of late
+readings could pass the Bridge fresh and then age in the queue toward the host. The contract now
+checks age again at handover, and it flags a reading 90 seconds before the maximum age, because the
+controller may read it up to a check period and a host frame later.</p>
+<h2 id="the-scenarios">The scenarios<a class="headerlink" href="#the-scenarios" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>What happens</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>nominal</code></td>
+<td>No faults. It shows that the three architectures perform alike when nothing goes wrong.</td>
+</tr>
+<tr>
+<td><code>sensor_swap_units</code></td>
+<td>At 08:00 SensorA is replaced by SensorB. The direct adapter is not updated; the Bridge's mapping is, through the change envelope.</td>
+</tr>
+<tr>
+<td><code>sensor_dropout</code></td>
+<td>No readings for 45 minutes after lunch.</td>
+</tr>
+<tr>
+<td><code>stale_burst</code></td>
+<td>For 75 minutes, readings arrive in bursts, late, with their old sample times.</td>
+</tr>
+<tr>
+<td><code>pump_fw_v2</code></td>
+<td>At 08:00 PumpB v2 replaces PumpA. The direct adapter is not updated.</td>
+</tr>
+<tr>
+<td><code>pump_silent</code></td>
+<td>The pump stops confirming for an hour. In the second half it also stops delivering.</td>
+</tr>
+<tr>
+<td><code>out_of_range</code></td>
+<td>Three readings of 600 mg/dL marked OK, then three error codes.</td>
+</tr>
+<tr>
+<td><code>replayed_command</code></td>
+<td>The lunch bolus command is replayed 7 minutes after it was issued, still inside its validity.</td>
+</tr>
+<tr>
+<td><code>display_throttle</code></td>
+<td>The display is held back for 2 hours while glucose goes low (a lunch bolus for a meal mostly not eaten).</td>
+</tr>
+<tr>
+<td><code>bridge_stall</code></td>
+<td>The Bridge itself stops for 20 minutes.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="results">Results<a class="headerlink" href="#results" title="Permanent link">&para;</a></h2>
+<p>Over 30 virtual patients and 24 hours, seed 1. <strong>Told</strong> means the controller or the display was
+told: a host watchdog alarm, a fail-safe flag, an unconfirmed report, or an annunciation shown on the
+display. Times are measured from the start of the fault.</p>
+<!-- ggl:closed-loop:start -->
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Architecture</th>
+<th>Minutes in 70-180 mg/dL, median [p5, p95]</th>
+<th>Patients below 54</th>
+<th>Told: patients, time median [p5, p95]</th>
+<th>Patients acting on unflagged stale glucose</th>
+<th>Unit or encoding errors through</th>
+<th>Alarms late / lost</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>nominal</td>
+<td>direct</td>
+<td>1278 [1149, 1440]</td>
+<td>0</td>
+<td>no fault</td>
+<td>0</td>
+<td>0</td>
+<td>0 / 0</td>
+</tr>
+<tr>
+<td>nominal</td>
+<td>bridge-basic</td>
+<td>1278 [1149, 1440]</td>
+<td>0</td>
+<td>no fault</td>
+<td>0</td>
+<td>0</td>
+<td>0 / 0</td>
+</tr>
+<tr>
+<td>nominal</td>
+<td>bridge-contract</td>
+<td>1278 [1149, 1440]</td>
+<td>0</td>
+<td>no fault</td>
+<td>0</td>
+<td>0</td>
+<td>0 / 0</td>
+</tr>
+<tr>
+<td>sensor_swap_units</td>
+<td>direct</td>
+<td>1277 [1117, 1440]</td>
+<td>0</td>
+<td>30 of 30, 1800 [1800, 1800] s</td>
+<td>30</td>
+<td>0</td>
+<td>0 / 0</td>
+</tr>
+<tr>
+<td>sensor_swap_units</td>
+<td>bridge-basic</td>
+<td>1277 [1157, 1440]</td>
+<td>0</td>
+<td>0 of 30</td>
+<td>0</td>
+<td>0</td>
+<td>0 / 0</td>
+</tr>
+<tr>
+<td>sensor_swap_units</td>
+<td>bridge-contract</td>
+<td>1277 [1157, 1440]</td>
+<td>0</td>
+<td>0 of 30</td>
+<td>0</td>
+<td>0</td>
+<td>0 / 0</td>
+</tr>
+<tr>
+<td>sensor_dropout</td>
+<td>direct</td>
+<td>1277 [1147, 1440]</td>
+<td>0</td>
+<td>30 of 30, 1860 [1800, 2040] s</td>
+<td>30</td>
+<td>0</td>
+<td>0 / 1</td>
+</tr>
+<tr>
+<td>sensor_dropout</td>
+<td>bridge-basic</td>
+<td>1277 [1147, 1440]</td>
+<td>0</td>
+<td>30 of 30, 1860 [1800, 2040] s</td>
+<td>30</td>
+<td>0</td>
+<td>0 / 1</td>
+</tr>
+<tr>
+<td>sensor_dropout</td>
+<td>bridge-contract</td>
+<td>1277 [1147, 1440]</td>
+<td>0</td>
+<td>30 of 30, 360 [300, 540] s</td>
+<td>0</td>
+<td>0</td>
+<td>0 / 1</td>
+</tr>
+<tr>
+<td>stale_burst</td>
+<td>direct</td>
+<td>1278 [1149, 1440]</td>
+<td>0</td>
+<td>10 of 30, 1800 [1800, 1800] s</td>
+<td>30</td>
+<td>0</td>
+<td>0 / 0</td>
+</tr>
+<tr>
+<td>stale_burst</td>
+<td>bridge-basic</td>
+<td>1278 [1149, 1440]</td>
+<td>0</td>
+<td>10 of 30, 1800 [1800, 1800] s</td>
+<td>30</td>
+<td>0</td>
+<td>0 / 0</td>
+</tr>
+<tr>
+<td>stale_burst</td>
+<td>bridge-contract</td>
+<td>1278 [1149, 1440]</td>
+<td>0</td>
+<td>30 of 30, 360 [300, 540] s</td>
+<td>0</td>
+<td>0</td>
+<td>0 / 0</td>
+</tr>
+<tr>
+<td>pump_fw_v2</td>
+<td>direct</td>
+<td>882 [689, 1147]</td>
+<td>0</td>
+<td>30 of 30, 1800 [1800, 1800] s</td>
+<td>0</td>
+<td>5760</td>
+<td>0 / 0</td>
+</tr>
+<tr>
+<td>pump_fw_v2</td>
+<td>bridge-basic</td>
+<td>1279 [1149, 1440]</td>
+<td>0</td>
+<td>0 of 30</td>
+<td>0</td>
+<td>0</td>
+<td>0 / 0</td>
+</tr>
+<tr>
+<td>pump_fw_v2</td>
+<td>bridge-contract</td>
+<td>1279 [1149, 1440]</td>
+<td>0</td>
+<td>0 of 30</td>
+<td>0</td>
+<td>0</td>
+<td>0 / 0</td>
+</tr>
+<tr>
+<td>pump_silent</td>
+<td>direct</td>
+<td>1278 [1149, 1440]</td>
+<td>0</td>
+<td>30 of 30, 1860 [1800, 2040] s</td>
+<td>0</td>
+<td>0</td>
+<td>0 / 0</td>
+</tr>
+<tr>
+<td>pump_silent</td>
+<td>bridge-basic</td>
+<td>1278 [1149, 1440]</td>
+<td>0</td>
+<td>30 of 30, 1860 [1800, 2040] s</td>
+<td>0</td>
+<td>0</td>
+<td>0 / 0</td>
+</tr>
+<tr>
+<td>pump_silent</td>
+<td>bridge-contract</td>
+<td>1278 [1149, 1440]</td>
+<td>0</td>
+<td>30 of 30, 480 [420, 660] s</td>
+<td>0</td>
+<td>0</td>
+<td>0 / 0</td>
+</tr>
+<tr>
+<td>out_of_range</td>
+<td>direct</td>
+<td>1278 [1149, 1440]</td>
+<td>0</td>
+<td>0 of 30</td>
+<td>30</td>
+<td>0</td>
+<td>0 / 0</td>
+</tr>
+<tr>
+<td>out_of_range</td>
+<td>bridge-basic</td>
+<td>1278 [1149, 1440]</td>
+<td>0</td>
+<td>0 of 30</td>
+<td>30</td>
+<td>0</td>
+<td>0 / 0</td>
+</tr>
+<tr>
+<td>out_of_range</td>
+<td>bridge-contract</td>
+<td>1278 [1149, 1440]</td>
+<td>0</td>
+<td>30 of 30, 77 [17, 257] s</td>
+<td>0</td>
+<td>0</td>
+<td>0 / 0</td>
+</tr>
+<tr>
+<td>replayed_command</td>
+<td>direct</td>
+<td>1260 [1076, 1399]</td>
+<td>6</td>
+<td>0 of 30</td>
+<td>0</td>
+<td>0</td>
+<td>0 / 0</td>
+</tr>
+<tr>
+<td>replayed_command</td>
+<td>bridge-basic</td>
+<td>1260 [1076, 1397]</td>
+<td>6</td>
+<td>0 of 30</td>
+<td>0</td>
+<td>0</td>
+<td>0 / 0</td>
+</tr>
+<tr>
+<td>replayed_command</td>
+<td>bridge-contract</td>
+<td>1278 [1149, 1440]</td>
+<td>0</td>
+<td>30 of 30, 0 [0, 0] s</td>
+<td>0</td>
+<td>0</td>
+<td>0 / 0</td>
+</tr>
+<tr>
+<td>display_throttle</td>
+<td>direct</td>
+<td>1311 [1101, 1418]</td>
+<td>2</td>
+<td>0 of 30</td>
+<td>0</td>
+<td>0</td>
+<td>15 / 0</td>
+</tr>
+<tr>
+<td>display_throttle</td>
+<td>bridge-basic</td>
+<td>1311 [1101, 1418]</td>
+<td>2</td>
+<td>0 of 30</td>
+<td>0</td>
+<td>0</td>
+<td>15 / 0</td>
+</tr>
+<tr>
+<td>display_throttle</td>
+<td>bridge-contract</td>
+<td>1311 [1101, 1418]</td>
+<td>2</td>
+<td>0 of 30</td>
+<td>0</td>
+<td>0</td>
+<td>27 / 0</td>
+</tr>
+<tr>
+<td>bridge_stall</td>
+<td>direct</td>
+<td>1278 [1149, 1440]</td>
+<td>0</td>
+<td>0 of 30</td>
+<td>0</td>
+<td>0</td>
+<td>0 / 0</td>
+</tr>
+<tr>
+<td>bridge_stall</td>
+<td>bridge-basic</td>
+<td>1278 [1149, 1440]</td>
+<td>0</td>
+<td>30 of 30, 1200 [1200, 1200] s</td>
+<td>30</td>
+<td>0</td>
+<td>0 / 0</td>
+</tr>
+<tr>
+<td>bridge_stall</td>
+<td>bridge-contract</td>
+<td>1278 [1149, 1440]</td>
+<td>0</td>
+<td>30 of 30, 1200 [1200, 1200] s</td>
+<td>30</td>
+<td>0</td>
+<td>0 / 0</td>
+</tr>
+</tbody>
+</table>
+<!-- ggl:closed-loop:end -->
+
+<p><img alt="Time to detect" src="../images/insulin-loop/fig3_time_to_detect.png" />
+<img alt="Interface harm per scenario" src="../images/insulin-loop/fig4_unsafe_age_and_lows.png" />
+<img alt="Glucose under the sensor swap" src="../images/insulin-loop/fig2_sensor_swap_traces.png" /></p>
+<p>Fig. 2 shows the patient with the median difference between architectures, not the most dramatic
+one. For that patient, direct's fallback to the programmed basal after the sensor swap gives nearly
+the same day as the Bridge.</p>
+<p><strong>What the table says.</strong></p>
+<ul>
+<li><strong>Nominal day.</strong> Glucose is the same in all three architectures.</li>
+<li><strong>Stale data.</strong> In <code>stale_burst</code> and <code>sensor_dropout</code>, the contract tells the controller within
+  minutes, and no controller cycle uses unflagged stale glucose. Direct and bridge-basic act on old
+  readings until the host's 30-minute watchdog; in <code>stale_burst</code> that watchdog is never reached for
+  most patients.</li>
+<li><strong>A stale adapter.</strong> It mis-doses a new pump firmware on every command, without a word. One mapping
+  entry on the Bridge absorbs the change.</li>
+<li><strong>Replays.</strong> A replayed bolus command goes through direct and bridge-basic. Only the contract's
+  command-id check blocks it.</li>
+<li><strong>Display throttling.</strong> The Bridge cannot fix it: alarms arrive late in every architecture. The
+  contract only makes the lateness visible, as G8 requires.</li>
+</ul>
+<h2 id="the-costs-and-the-single-point-of-failure">The costs, and the single point of failure<a class="headerlink" href="#the-costs-and-the-single-point-of-failure" title="Permanent link">&para;</a></h2>
+<!-- ggl:costs:start -->
+<table>
+<thead>
+<tr>
+<th>Architecture</th>
+<th>Controller to pump (s), nominal</th>
+<th>Sensor to controller (s), nominal</th>
+<th>Unneeded fail-safe minutes, nominal (median)</th>
+<th>Device paths dead in a 20-min stall (median)</th>
+<th>Unflagged stale-glucose minutes in the stall</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>direct</td>
+<td>0 [0, 0]</td>
+<td>13 [13, 13]</td>
+<td>0.0</td>
+<td>0</td>
+<td>0 [0, 0]</td>
+</tr>
+<tr>
+<td>bridge-basic</td>
+<td>30 [30, 30]</td>
+<td>13 [13, 13]</td>
+<td>0.0</td>
+<td>3</td>
+<td>15 [15, 15]</td>
+</tr>
+<tr>
+<td>bridge-contract</td>
+<td>30 [30, 30]</td>
+<td>13 [13, 13]</td>
+<td>0.0</td>
+<td>3</td>
+<td>10 [10, 15]</td>
+</tr>
+</tbody>
+</table>
+<!-- ggl:costs:end -->
+
+<p><img alt="What the Bridge costs" src="../images/insulin-loop/fig6_bridge_costs.png" /></p>
+<p><strong>Latency.</strong> The Bridge adds one bus hop, a 30-second frame on the command path.</p>
+<p><strong>Bridge stall.</strong> When the Bridge stalls, every device path stops at once, and the contract stalls
+with it. The controller then uses unflagged stale glucose until the Bridge resumes, and the health
+monitor reports the stall only afterwards. What still works:</p>
+<ul>
+<li>the pump falls back to its programmed basal when its last command expires;</li>
+<li>the host's own watchdogs still run.</li>
+</ul>
+<p>Direct has nothing to stall and does better here. Detection is not tolerance: a real Bridge would
+need redundancy and its own safety case, and none is modelled.</p>
+<h2 id="limitations-and-threats-to-validity">Limitations and threats to validity<a class="headerlink" href="#limitations-and-threats-to-validity" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Invented physiology.</strong> The model is a teaching structure with invented parameters. The glucose
+  outcomes only show that the interface effects reach the patient model; they are not clinical
+  results.</li>
+<li><strong>Invented controller.</strong> It was tuned on the healthy-data day so that the comparisons isolate the
+  interface. A different controller would react differently to the same faults: for example, one
+  that checks reading age itself would close much of the stale-data gap.</li>
+<li><strong>The counting model.</strong> The change ledger counts what a stated model says, not what any organization
+  measured. A <a href="../experiments/#7-change-ledger">sensitivity table</a> shows the direct case with adapters
+  living in the devices.</li>
+<li><strong>Symmetric adapter checks.</strong> Direct adapters have the range and type checks a competent integrator
+  would write. They have no age, command-id or confirmation checks; adding those to direct would
+  narrow the RQ3 differences. The design note records the choice.</li>
+<li><strong>Single implementation.</strong> One author wrote all three architectures on simplified bus models with no
+  clock drift, jitter or loss.</li>
+</ul>
+<p>See also the <a href="../dev/insulin-loop-design/">design note</a> for every place the specification and the
+code disagreed.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "content.code.copy"], "search": "../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.c21346df.min.js"></script>
+      
+    
+  </body>
+</html>
