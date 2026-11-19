@@ -36,6 +36,7 @@ and the project follows [Semantic Versioning](https://semver.org/).
 
 ### Documentation
 - Related work now covers the U.S. Air Force OMS Isolator, the A-GRA Vehicle Interface and AMS GRA, with a vocabulary table and where they differ from the Bridge.
+- Related work now cites the September 2026 Department-wide MOSA policy.
 
 ## [0.1.2] - 2026-11-09
 

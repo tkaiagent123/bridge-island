@@ -13,6 +13,18 @@ program's approach.
 * U.S. Government Accountability Office, *Weapon Systems Acquisition: DOD Needs Better
   Planning to Attain Benefits of Modular Open Systems*, GAO-25-106931, January 22, 2025.
   <https://www.gao.gov/products/gao-25-106931>
+* Under Secretary of War for Acquisition and Sustainment, memorandum, "Establishment of
+  Department-Wide Modular Open Systems Approach Policy and Minimum Expectations," September 21,
+  2026. The Department-wide MOSA policy; it directs that earlier conflicting MOSA guidance be
+  rescinded. No Department-hosted copy had been found when this was written. The Department's
+  acquisition office announced it at
+  <https://www.linkedin.com/posts/asd-acquisition_establishment-dow-mosa-policy-and-minimum-activity-7524214372768972800-F4hS>,
+  and the quotation here was checked against a copy of the memorandum. It says that "Where interfaces
+  differ, efficient translators, adapters, mappings, or other objective integration approaches may be
+  more appropriate than forced re-conformance", which is the role the Translator Module plays here. It
+  also asks that the delivered repository package identify "versions, tailoring, mappings, adapters,
+  extensions, and deviations"; the YAML mapping spec records mappings in a machine-readable, versioned
+  form.
 
 ## Background on modularity and mediation
 
